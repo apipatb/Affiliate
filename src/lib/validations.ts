@@ -47,7 +47,7 @@ export function validateData<T>(
   }
 
   const errors: Record<string, string[]> = {}
-  result.error.errors.forEach((err) => {
+  result.error.issues.forEach((err) => {
     const path = err.path.join('.')
     if (!errors[path]) {
       errors[path] = []
