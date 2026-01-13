@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id           String    @id @default(cuid())
+  title        String
+  description  String
+  price        Float
+  affiliateUrl String
+  imageUrl     String
+  mediaType    MediaType @default(IMAGE)
+  category     Category  @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  clicks       Int       @default(0)
+  featured     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([featured])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([featured, createdAt])
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  products Product[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}

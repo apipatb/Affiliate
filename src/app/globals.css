@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #0f172a;
+  --color-accent: #f59e0b;
+  --color-background: #ffffff;
+  --color-foreground: #0a0a0a;
+  --color-muted: #4a5568;
+  --color-border: #e2e8f0;
+
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --radius-sm: 0.5rem;
+}
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #0a0a0a;
+  }
+
+  html {
+    font-size: 20px;
+    /* Larger text size */
+  }
+
+  @media (max-width: 768px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
+  body {
+    @apply bg-white text-black antialiased selection:bg-primary/20;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.6;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/90 backdrop-blur-md border border-slate-200 shadow-lg;
+  }
+
+  .premium-card {
+    @apply bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20;
+  }
+}
