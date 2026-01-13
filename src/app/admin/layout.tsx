@@ -70,14 +70,14 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-slate-200 bg-white p-4 flex flex-col">
+      <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 flex flex-col">
         {/* Back to site link */}
         <div className="mb-6">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm text-slate-600 hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             กลับไปหน้าเว็บไซต์
@@ -95,8 +95,8 @@ export default function AdminLayout({
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                 )}
               >
                 <item.icon className="w-5 h-5" />
@@ -107,16 +107,16 @@ export default function AdminLayout({
         </nav>
 
         {/* User section */}
-        <div className="border-t border-slate-200 pt-4 mt-4">
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
           {user && (
             <div className="px-3 py-2 mb-2">
               <div className="flex items-center gap-2 text-sm">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary dark:text-blue-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate text-black">{user.email}</p>
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
+                  <p className="font-medium truncate text-black dark:text-slate-100">{user.email}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <Shield className="w-3 h-3" />
                     {user.role}
                   </p>
@@ -127,7 +127,7 @@ export default function AdminLayout({
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
           >
             <LogOut className="w-5 h-5" />
             {isLoggingOut ? 'กำลังออกจากระบบ...' : 'ออกจากระบบ'}
@@ -136,7 +136,7 @@ export default function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 p-8 bg-slate-50">
+      <main className="ml-64 p-8 bg-slate-50 dark:bg-slate-900">
         {children}
       </main>
     </div>

@@ -4,7 +4,7 @@ import ProductFilters from '@/components/ProductFilters'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'สินค้า - BoomBigNose รีวิว',
+  title: 'สินค้า - กอล์ฟรีวิว',
   description: 'เรียกดูคอลเลกชันสินค้าที่คัดสรรมาอย่างดีจากทุกหมวดหมู่',
 }
 
@@ -48,11 +48,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   ])
 
   return (
-    <div className="py-12 bg-white">
+    <div className="py-12 bg-white dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4 text-black">สินค้าทั้งหมด</h1>
-          <p className="text-slate-600">
+          <h1 className="text-4xl font-bold mb-4 text-black dark:text-slate-100">สินค้าทั้งหมด</h1>
+          <p className="text-slate-600 dark:text-slate-400">
             เรียกดูคอลเลกชันสินค้าที่คัดสรรมาอย่างดี
           </p>
         </div>
@@ -70,15 +70,15 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           {/* Products Grid */}
           <div className="flex-1">
             {products.length === 0 ? (
-              <div className="text-center py-16 bg-slate-50 rounded-xl">
-                <p className="text-xl text-slate-600">ไม่พบสินค้า</p>
-                <p className="text-sm text-slate-500 mt-2">
+              <div className="text-center py-16 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <p className="text-xl text-slate-600 dark:text-slate-300">ไม่พบสินค้า</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                   ลองปรับการค้นหาหรือตัวกรองของคุณ
                 </p>
               </div>
             ) : (
               <>
-                <p className="text-sm text-slate-600 mb-6">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
                   แสดง {products.length} สินค้า
                   {params.category && ` ในหมวด ${params.category}`}
                   {params.search && ` ที่ตรงกับ "${params.search}"`}

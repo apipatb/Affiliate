@@ -16,7 +16,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const buyUrl = `/products/${product.id}/go`
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
       <Link href={`/products/${product.id}`}>
         <div className="aspect-square bg-slate-100 relative overflow-hidden">
           {product.mediaType === 'VIDEO' ? (
@@ -55,25 +55,25 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="p-6">
         <Link
           href={`/products?category=${product.category.slug}`}
-          className="text-xs font-bold text-primary mb-2 uppercase tracking-wider hover:underline inline-block"
+          className="text-xs font-bold text-primary dark:text-blue-400 mb-2 uppercase tracking-wider hover:underline inline-block"
         >
           {product.category.name}
         </Link>
         <Link href={`/products/${product.id}`}>
-          <h3 className="text-lg font-bold mb-2 text-black group-hover:text-primary transition-colors line-clamp-2">
+          <h3 className="text-lg font-bold mb-2 text-black dark:text-slate-100 group-hover:text-primary dark:group-hover:text-blue-400 transition-colors line-clamp-2">
             {product.title}
           </h3>
         </Link>
-        <p className="text-sm text-slate-600 line-clamp-2 mb-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-4">
           {product.description}
         </p>
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-black">฿{product.price.toFixed(2)}</span>
+          <span className="text-xl font-bold text-black dark:text-slate-100">฿{product.price.toFixed(2)}</span>
           <a
             href={buyUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-semibold text-primary inline-flex items-center gap-1 hover:gap-2 transition-all"
+            className="text-sm font-semibold text-primary dark:text-blue-400 inline-flex items-center gap-1 hover:gap-2 transition-all"
           >
             ซื้อเลย <ArrowRight className="w-3 h-3" />
           </a>

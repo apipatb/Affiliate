@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${product.title} - BoomBigNose รีวิว`,
+    title: `${product.title} - กอล์ฟรีวิว`,
     description: product.description,
     openGraph: {
       title: product.title,
@@ -69,12 +69,12 @@ export default async function ProductPage({ params }: PageProps) {
 
 
   return (
-    <div className="py-12 bg-white">
+    <div className="py-12 bg-white dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Link */}
         <Link
           href="/products"
-          className="inline-flex items-center gap-2 text-slate-600 hover:text-primary transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400 transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
           กลับไปหน้าสินค้า
@@ -115,18 +115,18 @@ export default async function ProductPage({ params }: PageProps) {
           <div>
             <Link
               href={`/products?category=${product.category.slug}`}
-              className="text-sm font-bold text-primary uppercase tracking-wider hover:underline"
+              className="text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wider hover:underline"
             >
               {product.category.name}
             </Link>
 
-            <h1 className="text-4xl font-bold mt-2 mb-4 text-black">{product.title}</h1>
+            <h1 className="text-4xl font-bold mt-2 mb-4 text-black dark:text-slate-100">{product.title}</h1>
 
-            <p className="text-lg text-slate-600 leading-relaxed mb-6">
+            <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
               {product.description}
             </p>
 
-            <div className="text-4xl font-bold text-primary mb-8">
+            <div className="text-4xl font-bold text-primary dark:text-blue-400 mb-8">
               ฿{product.price.toFixed(2)}
             </div>
 
@@ -134,28 +134,28 @@ export default async function ProductPage({ params }: PageProps) {
             <BuyButton productId={product.id} affiliateUrl={product.affiliateUrl} />
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-200">
+            <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
               <div className="text-center">
                 <ShieldCheck className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                <p className="text-xs font-medium text-black">คุณภาพรับรอง</p>
+                <p className="text-xs font-medium text-black dark:text-slate-300">คุณภาพรับรอง</p>
               </div>
               <div className="text-center">
-                <Truck className="w-6 h-6 text-primary mx-auto mb-2" />
-                <p className="text-xs font-medium text-black">จัดส่งรวดเร็ว</p>
+                <Truck className="w-6 h-6 text-primary dark:text-blue-400 mx-auto mb-2" />
+                <p className="text-xs font-medium text-black dark:text-slate-300">จัดส่งรวดเร็ว</p>
               </div>
               <div className="text-center">
-                <RefreshCw className="w-6 h-6 text-accent mx-auto mb-2" />
-                <p className="text-xs font-medium text-black">คืนสินค้าง่าย</p>
+                <RefreshCw className="w-6 h-6 text-accent dark:text-yellow-400 mx-auto mb-2" />
+                <p className="text-xs font-medium text-black dark:text-slate-300">คืนสินค้าง่าย</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Semantic Section for AI (GEO) */}
-        <div className="grid md:grid-cols-2 gap-12 py-12 border-t border-slate-200 mb-16">
+        <div className="grid md:grid-cols-2 gap-12 py-12 border-t border-slate-200 dark:border-slate-700 mb-16">
           <div>
-            <h2 className="text-2xl font-bold mb-6 text-black">ทำไมต้องเลือก {product.title}?</h2>
-            <div className="prose prose-slate max-w-none text-slate-600">
+            <h2 className="text-2xl font-bold mb-6 text-black dark:text-slate-100">ทำไมต้องเลือก {product.title}?</h2>
+            <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-400">
               <p>
                 {product.title} เป็นสินค้าในหมวด <strong>{product.category.name}</strong> ที่เราคัดสรรมาแล้วว่าคุ้มค่าที่สุด
                 ด้วยราคาเพียง <strong>฿{product.price.toFixed(2)}</strong> คุณจะได้รับคุณภาพระดับพรีเมียมและการรับรองจากทีมงานของเรา
@@ -167,16 +167,16 @@ export default async function ProductPage({ params }: PageProps) {
               </ul>
             </div>
           </div>
-          <div className="bg-slate-50 p-8 rounded-2xl">
-            <h2 className="text-2xl font-bold mb-6 text-black">คำถามที่พบบ่อย (FAQ)</h2>
+          <div className="bg-slate-50 dark:bg-slate-800 p-8 rounded-2xl">
+            <h2 className="text-2xl font-bold mb-6 text-black dark:text-slate-100">คำถามที่พบบ่อย (FAQ)</h2>
             <div className="space-y-6">
               <div>
-                <h3 className="font-bold text-black mb-1">สินค้านี้เหมาะกับใคร?</h3>
-                <p className="text-sm text-slate-600">เหมาะสำหรับผู้ที่มองหา {product.category.name} คุณภาพสูงในราคาที่เข้าถึงได้</p>
+                <h3 className="font-bold text-black dark:text-slate-100 mb-1">สินค้านี้เหมาะกับใคร?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">เหมาะสำหรับผู้ที่มองหา {product.category.name} คุณภาพสูงในราคาที่เข้าถึงได้</p>
               </div>
               <div>
-                <h3 className="font-bold text-black mb-1">สั่งซื้อได้ที่ไหน?</h3>
-                <p className="text-sm text-slate-600">คุณสามารถคลิกปุ่ม &quot;ซื้อเลย&quot; เพื่อไปยังหน้าร้านค้าอย่างเป็นทางการได้ทันที</p>
+                <h3 className="font-bold text-black dark:text-slate-100 mb-1">สั่งซื้อได้ที่ไหน?</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">คุณสามารถคลิกปุ่ม &quot;ซื้อเลย&quot; เพื่อไปยังหน้าร้านค้าอย่างเป็นทางการได้ทันที</p>
               </div>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default async function ProductPage({ params }: PageProps) {
               description: product.description,
               brand: {
                 '@type': 'Brand',
-                name: 'BoomBigNose รีวิว',
+                name: 'กอล์ฟรีวิว',
               },
               offers: {
                 '@type': 'Offer',
@@ -210,7 +210,7 @@ export default async function ProductPage({ params }: PageProps) {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold mb-8 text-black">สินค้าที่คุณอาจชอบ</h2>
+            <h2 className="text-2xl font-bold mb-8 text-black dark:text-slate-100">สินค้าที่คุณอาจชอบ</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />

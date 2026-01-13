@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Providers from "@/components/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BoomBigNose รีวิว - แนะนำสินค้าคุณภาพ",
+  title: "กอล์ฟรีวิว - แนะนำสินค้าคุณภาพ",
   description: "ค้นพบสินค้าที่ดีที่สุดจากการคัดสรรอย่างพิถีพิถันจากทีมงานของเรา",
 };
 
@@ -26,17 +27,19 @@ export default function RootLayout({
   return (
     <html lang="th" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased pt-16 bg-white text-black`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased pt-16`}
       >
-        <Navbar />
-        <main className="min-h-screen bg-white">
-          {children}
-        </main>
-        <footer className="bg-slate-50 border-t border-slate-200 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-600 text-sm">
-            <p>© 2025 BoomBigNose รีวิว สงวนลิขสิทธิ์</p>
-          </div>
-        </footer>
+        <Providers>
+          <Navbar />
+          <main className="min-h-screen bg-white dark:bg-slate-900">
+            {children}
+          </main>
+          <footer className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-600 dark:text-slate-400 text-sm">
+              <p>© 2025 กอล์ฟรีวิว สงวนลิขสิทธิ์</p>
+            </div>
+          </footer>
+        </Providers>
       </body>
     </html>
   );
