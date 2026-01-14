@@ -32,8 +32,8 @@ export default async function CategoriesPage() {
     <div className="py-12 bg-white dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-black dark:text-slate-100">เรียกดูตามหมวดหมู่</h1>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4 text-black dark:text-white">เรียกดูตามหมวดหมู่</h1>
+          <p className="text-slate-700 dark:text-slate-300 max-w-2xl mx-auto">
             สำรวจคอลเลกชันที่คัดสรรมาอย่างดีจากหลากหลายหมวดหมู่
           </p>
         </div>
@@ -70,14 +70,14 @@ export default async function CategoriesPage() {
               <div className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-black dark:text-slate-100 group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
+                    <h3 className="font-bold text-black dark:text-white group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
                       {category.name}
                     </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       {category._count.products} สินค้า
                     </p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-primary dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                  <ArrowRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-primary dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </Link>
@@ -86,7 +86,7 @@ export default async function CategoriesPage() {
 
         {categories.length === 0 && (
           <div className="text-center py-16 bg-slate-50 dark:bg-slate-800 rounded-xl">
-            <p className="text-xl text-slate-600 dark:text-slate-400">ยังไม่มีหมวดหมู่</p>
+            <p className="text-xl text-slate-700 dark:text-slate-200">ยังไม่มีหมวดหมู่</p>
           </div>
         )}
       </div>

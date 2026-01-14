@@ -56,14 +56,14 @@ export default function ProductFilters({
     <div className="space-y-6">
       {/* Search */}
       <div>
-        <h3 className="text-sm font-semibold mb-3 text-black">ค้นหา</h3>
+        <h3 className="text-sm font-semibold mb-3 text-black dark:text-white">ค้นหา</h3>
         <form onSubmit={handleSearch} className="relative">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="ค้นหาสินค้า..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary text-sm text-black"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-400 text-sm text-black dark:text-white"
           />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         </form>
@@ -71,14 +71,14 @@ export default function ProductFilters({
 
       {/* Categories */}
       <div>
-        <h3 className="text-sm font-semibold mb-3 text-black">หมวดหมู่</h3>
+        <h3 className="text-sm font-semibold mb-3 text-black dark:text-white">หมวดหมู่</h3>
         <div className="space-y-1">
           <button
             onClick={() => updateFilters('category', null)}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
               !currentCategory
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-black hover:bg-slate-100'
+                ? 'bg-primary/10 dark:bg-blue-500/20 text-primary dark:text-blue-400 font-medium'
+                : 'text-black dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             ทุกหมวดหมู่
@@ -89,12 +89,12 @@ export default function ProductFilters({
               onClick={() => updateFilters('category', category.slug)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex justify-between items-center ${
                 currentCategory === category.slug
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-black hover:bg-slate-100'
+                  ? 'bg-primary/10 dark:bg-blue-500/20 text-primary dark:text-blue-400 font-medium'
+                  : 'text-black dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               <span>{category.name}</span>
-              <span className="text-xs text-slate-500">{category._count.products}</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400">{category._count.products}</span>
             </button>
           ))}
         </div>
@@ -104,7 +104,7 @@ export default function ProductFilters({
       {hasFilters && (
         <button
           onClick={clearFilters}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
         >
           <X className="w-4 h-4" />
           ล้างตัวกรองทั้งหมด

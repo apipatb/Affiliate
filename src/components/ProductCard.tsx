@@ -60,15 +60,15 @@ export default function ProductCard({ product }: { product: Product }) {
           {product.category.name}
         </Link>
         <Link href={`/products/${product.id}`}>
-          <h3 className="text-lg font-bold mb-2 text-black dark:text-slate-100 group-hover:text-primary dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+          <h3 className="text-lg font-bold mb-2 text-black dark:text-white group-hover:text-primary dark:group-hover:text-blue-400 transition-colors line-clamp-2">
             {product.title}
           </h3>
         </Link>
-        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-4">
+        <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2 mb-4">
           {product.description}
         </p>
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-black dark:text-slate-100">฿{product.price.toFixed(2)}</span>
+          <span className="text-xl font-bold text-black dark:text-white">฿{product.price.toFixed(2)}</span>
           <a
             href={buyUrl}
             target="_blank"

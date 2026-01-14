@@ -31,7 +31,7 @@ export default async function Home() {
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-gradient-to-b from-slate-900 to-slate-500 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent leading-tight">
             ค้นพบสินค้าที่ดีที่สุด <br /> คัดสรรมาเพื่อคุณ
           </h1>
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed">
+          <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-700 dark:text-slate-300 mb-10 leading-relaxed">
             เราคัดสรรสินค้าที่ได้รับคะแนนสูงสุดจากทั่วทุกมุมโลก เพื่อให้คุณไม่ต้องเสียเวลาค้นหาเอง เริ่มต้นช้อปอย่างชาญฉลาดที่นี่
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -54,8 +54,8 @@ export default async function Home() {
               <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-6">
                 <ShieldCheck className="w-6 h-6 text-primary dark:text-blue-400" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-black dark:text-slate-100">คุณภาพที่ตรวจสอบแล้ว</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+              <h3 className="text-xl font-bold mb-3 text-black dark:text-white">คุณภาพที่ตรวจสอบแล้ว</h3>
+              <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
                 ทุกสินค้าผ่านการวิจัยอย่างละเอียดและตรวจสอบคุณภาพและความน่าเชื่อถือ
               </p>
             </div>
@@ -63,8 +63,8 @@ export default async function Home() {
               <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-6">
                 <Zap className="w-6 h-6 text-accent dark:text-yellow-400" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-black dark:text-slate-100">ดีลที่ดีที่สุด</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+              <h3 className="text-xl font-bold mb-3 text-black dark:text-white">ดีลที่ดีที่สุด</h3>
+              <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
                 เราติดตามประวัติราคาและค้นหาดีลที่ดีที่สุดที่มีอยู่ออนไลน์
               </p>
             </div>
@@ -72,8 +72,8 @@ export default async function Home() {
               <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-6">
                 <ShoppingBag className="w-6 h-6 text-green-500" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-black dark:text-slate-100">ช้อปง่าย</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+              <h3 className="text-xl font-bold mb-3 text-black dark:text-white">ช้อปง่าย</h3>
+              <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
                 ลิงก์ตรงไปยังร้านค้าที่น่าเชื่อถือเพื่อประสบการณ์การช้อปปิ้งที่ราบรื่นและปลอดภัย
               </p>
             </div>
@@ -85,8 +85,8 @@ export default async function Home() {
       <section className="py-24 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-black dark:text-slate-100">สินค้าแนะนำจากบรรณาธิการ</h2>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h2 className="text-3xl font-bold mb-4 text-black dark:text-white">สินค้าแนะนำจากบรรณาธิการ</h2>
+            <p className="text-slate-700 dark:text-slate-300">
               สินค้าที่ทีมงานของเราคัดสรรมาอย่างพิถีพิถัน
             </p>
           </div>
@@ -97,7 +97,7 @@ export default async function Home() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-slate-600 dark:text-slate-400">
+            <div className="text-center py-12 text-slate-700 dark:text-slate-300">
               ยังไม่มีสินค้าแนะนำ
             </div>
           )}
