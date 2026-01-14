@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
 
   // Pagination parameters
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')))
+  // Allow higher limit for admin requests (10000 for admin, 100 for public)
+  const requestedLimit = parseInt(searchParams.get('limit') || '20')
+  const limit = requestedLimit > 1000 ? Math.min(10000, requestedLimit) : Math.min(100, requestedLimit)
   const skip = (page - 1) * limit
 
   const where: Record<string, unknown> = {}
