@@ -3,37 +3,45 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 
 const categories = [
+  { name: 'แฟชั่นและเครื่องแต่งกาย', slug: 'fashion' },
+  { name: 'รองเท้าและกระเป๋า', slug: 'shoes-bags' },
+  { name: 'ความงามและของใช้ส่วนตัว', slug: 'beauty' },
   { name: 'อิเล็กทรอนิกส์', slug: 'electronics' },
-  { name: 'แฟชั่น', slug: 'fashion' },
   { name: 'ของใช้ในบ้าน', slug: 'home' },
-  { name: 'ความงาม', slug: 'beauty' },
-  { name: 'กีฬา', slug: 'sports' },
-  { name: 'หนังสือ', slug: 'books' },
-  { name: 'ของเล่น', slug: 'toys' },
-  { name: 'อาหารและเครื่องดื่ม', slug: 'food' },
+  { name: 'กีฬาและกิจกรรมกลางแจ้ง', slug: 'sports' },
+  { name: 'ดูแลรักษาและทำความสะอาด', slug: 'care-cleaning' },
 ]
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { secret } = body
+    const { secret, clean = false } = body
 
     // Simple secret check
     if (secret !== 'seed-production-database-2026') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if already seeded
-    const existingProducts = await prisma.product.count()
-    if (existingProducts > 0) {
-      return NextResponse.json({
-        message: 'Database already has data',
-        counts: {
-          products: existingProducts,
-          categories: await prisma.category.count(),
-          users: await prisma.user.count()
-        }
-      })
+    // Clean database if requested
+    if (clean) {
+      console.log('🧹 Cleaning database...')
+      await prisma.product.deleteMany()
+      await prisma.category.deleteMany()
+      // Don't delete users
+      console.log('✅ Database cleaned')
+    } else {
+      // Check if already seeded
+      const existingProducts = await prisma.product.count()
+      if (existingProducts > 0) {
+        return NextResponse.json({
+          message: 'Database already has data. Use { "clean": true } to reset',
+          counts: {
+            products: existingProducts,
+            categories: await prisma.category.count(),
+            users: await prisma.user.count()
+          }
+        })
+      }
     }
 
     console.log('Starting seed...')
@@ -50,26 +58,51 @@ export async function POST(request: Request) {
     const createdCategories = await prisma.category.findMany()
     console.log('Categories created')
 
-    // Create products
-    const products = []
-    const titles = ['Elite', 'Pro', 'Mega', 'Premium', 'Super', 'Ultra']
-    const types = ['Wireless Headphones', 'Smart Watch', 'Fitness Tracker', 'Speaker', 'Camera']
+    // Get category IDs
+    const fashionCat = createdCategories.find(c => c.slug === 'fashion')!
+    const cleaningCat = createdCategories.find(c => c.slug === 'care-cleaning')!
 
-    for (const category of createdCategories) {
-      for (let i = 0; i < 15; i++) {
-        const title = `${titles[i % titles.length]} ${types[i % types.length]} ${i > 5 ? 'Plus' : i > 10 ? 'Max' : ''}`
-        products.push({
-          title,
-          description: `คุณภาพสูง ${title} สำหรับทุกความต้องการของคุณ`,
-          price: Math.floor(Math.random() * 5000) + 500,
-          affiliateUrl: `https://shopee.co.th/product/${Math.random().toString(36).substring(7)}`,
-          imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
-          mediaType: 'IMAGE' as const,
-          categoryId: category.id,
-          featured: Math.random() > 0.8,
-        })
-      }
-    }
+    // Create real products from CSV
+    const products = [
+      {
+        title: 'ROCKER น้ำยาทำความสะอาดรองเท้า Premium',
+        description: `🔥อันดับ1🔥 ROCKER น้ำยาทำความสะอาดรองเท้า Premium สูตรใหม่
+
+ฟรีแปรง+ผ้าไมโครไฟเบอร์
+- ซักรองเท้าได้ทุกชนิด
+- ขัดรองเท้าให้สะอาดเหมือนใหม่
+- เช็ดรองเท้าง่าย ไม่ทำลายผิว
+
+ร้านค้า: ROCKER น้ำยาทำความสะอาดรองเท้า
+ยอดขาย: 200พัน+
+ค่าคอมมิชชั่น: ฿27.36 (13.75%)`,
+        price: 199,
+        affiliateUrl: 'https://s.shopee.co.th/8fM5ddAqJi',
+        imageUrl: 'https://down-th.img.susercontent.com/file/th-11134207-7r98o-lxq9s8gd7uj38e',
+        mediaType: 'IMAGE' as const,
+        categoryId: cleaningCat.id,
+        featured: true,
+      },
+      {
+        title: 'Adidas Originals CTT 3.0 Denim Jacket',
+        description: `🌷ของแท้ 100% 🎆 Adidas Originals CTT 3.0 Denim Jacket
+
+- ยูนิเซ็กซ์ ใส่ได้ทั้งชายและหญิง
+- แจ็คเก็ตยีนส์ทรงหลวม
+- สไตล์สตรีท แฟชั่น
+- คุณภาพพรีเมียม
+
+ร้านค้า: Roy's Clothing.th
+ยอดขาย: 7
+ค่าคอมมิชชั่น: ฿619.75 (16.75%)`,
+        price: 3700,
+        affiliateUrl: 'https://s.shopee.co.th/8pfVpwACyl',
+        imageUrl: 'https://down-th.img.susercontent.com/file/sg-11134201-7rdvy-m23yp9yfbwbzbe',
+        mediaType: 'IMAGE' as const,
+        categoryId: fashionCat.id,
+        featured: true,
+      },
+    ]
 
     console.log(`Creating ${products.length} products...`)
 
@@ -77,7 +110,7 @@ export async function POST(request: Request) {
       await prisma.product.create({ data: product })
     }
 
-    console.log(`✅ Created ${products.length} products`)
+    console.log(`✅ Created ${products.length} products across ${createdCategories.length} categories`)
 
     // Create admin user
     const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 12)

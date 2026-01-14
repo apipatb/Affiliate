@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:seed:clean": "npx tsx prisma/seed-clean.ts",
     "db:seed:admin": "npx tsx prisma/seed-admin.ts",
     "db:studio": "prisma studio"
   },

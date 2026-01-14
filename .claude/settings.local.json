@@ -31,7 +31,8 @@
       "Bash(curl -s https://affiliate-golf-review.vercel.app)",
       "Bash(curl:*)",
       "Bash(python3:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npm run db:seed:clean:*)"
     ]
   }
 }
