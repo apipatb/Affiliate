@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import { productSchema, validateData } from '@/lib/validations'
 import { rateLimit, getClientIdentifier, RateLimitPresets } from '@/lib/rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -124,6 +125,13 @@ export async function POST(request: NextRequest) {
       include: { category: true },
     })
 
+    // Revalidate pages to show new product
+    revalidatePath('/', 'layout')
+    revalidatePath('/products')
+    if (featured) {
+      revalidatePath('/featured')
+    }
+    revalidatePath('/categories')
 
     return NextResponse.json(product, { status: 201 })
   } catch (error) {

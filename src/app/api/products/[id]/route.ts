@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth'
 import { productUpdateSchema, validateData } from '@/lib/validations'
 import { rateLimit, getClientIdentifier, RateLimitPresets } from '@/lib/rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -54,6 +55,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       include: { category: true },
     })
 
+    // Revalidate pages to show updated product
+    revalidatePath('/', 'layout')
+    revalidatePath('/products')
+    revalidatePath('/featured')
+    revalidatePath(`/products/${id}`)
+
     return NextResponse.json(product)
   } catch (error) {
     console.error('Error updating product:', error)
@@ -84,6 +91,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     await prisma.product.delete({
       where: { id },
     })
+
+    // Revalidate pages after deleting product
+    revalidatePath('/', 'layout')
+    revalidatePath('/products')
+    revalidatePath('/featured')
+    revalidatePath('/categories')
 
     return NextResponse.json({ success: true })
   } catch (error) {

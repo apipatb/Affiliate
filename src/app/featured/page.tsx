@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   description: 'สินค้าแนะนำที่คัดสรรมาอย่างพิถีพิถันจากทีมงาน',
 }
 
+// Make this page dynamic so it always fetches fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getFeaturedProducts() {
   return prisma.product.findMany({
     where: { featured: true },

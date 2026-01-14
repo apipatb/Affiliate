@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { autoCategorizeBulk, getCategoryPlaceholderImage } from '@/lib/category-matcher'
+import { revalidatePath } from 'next/cache'
 
 interface CSVProduct {
   productId: string
@@ -219,6 +220,16 @@ export async function POST(request: NextRequest) {
           title: product.title,
           error: error instanceof Error ? error.message : 'Unknown error',
         })
+      }
+    }
+
+    // Revalidate pages after bulk import
+    if (imported.length > 0) {
+      revalidatePath('/', 'layout')
+      revalidatePath('/products')
+      revalidatePath('/categories')
+      if (featured) {
+        revalidatePath('/featured')
       }
     }
 

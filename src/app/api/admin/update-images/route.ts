@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCategoryPlaceholderImage } from '@/lib/category-matcher'
+import { revalidatePath } from 'next/cache'
 
 export async function POST(request: NextRequest) {
   // Check authentication
@@ -53,6 +54,13 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ Successfully updated ${updated.length} products`)
+
+    // Revalidate pages to show updated images
+    revalidatePath('/', 'layout')
+    revalidatePath('/products')
+    revalidatePath('/featured')
+    revalidatePath('/categories')
+    console.log('✅ Cache revalidated')
 
     return NextResponse.json({
       success: true,
