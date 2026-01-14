@@ -31,26 +31,29 @@ export async function GET(request: NextRequest, context: RouteContext) {
       )
     }
 
-    // Increment click count (fire and forget)
-    prisma.product.update({
-      where: { id },
-      data: { clicks: { increment: 1 } },
-    }).catch((err) => {
-      console.error('Failed to increment clicks:', err)
-    })
+    // Increment click count and wait for it to complete
+    try {
+      await prisma.product.update({
+        where: { id },
+        data: { clicks: { increment: 1 } },
+      })
 
-    // Log click for analytics (optional)
-    const userAgent = request.headers.get('user-agent') || 'unknown'
-    const referer = request.headers.get('referer') || 'direct'
+      // Log click for analytics
+      const userAgent = request.headers.get('user-agent') || 'unknown'
+      const referer = request.headers.get('referer') || 'direct'
 
-    console.log('Affiliate click:', {
-      productId: id,
-      productTitle: product.title,
-      clicks: product.clicks + 1,
-      userAgent,
-      referer,
-      timestamp: new Date().toISOString(),
-    })
+      console.log('✅ Affiliate click tracked:', {
+        productId: id,
+        productTitle: product.title,
+        newClickCount: product.clicks + 1,
+        userAgent,
+        referer,
+        timestamp: new Date().toISOString(),
+      })
+    } catch (err) {
+      console.error('❌ Failed to increment clicks:', err)
+      // Continue with redirect even if click tracking fails
+    }
 
     // Redirect to affiliate URL
     return NextResponse.redirect(product.affiliateUrl, { status: 302 })

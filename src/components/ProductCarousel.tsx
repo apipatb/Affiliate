@@ -21,7 +21,8 @@ interface Product {
   }
   clicks: number
   featured: boolean
-  createdAt: string
+  createdAt: string | Date
+  updatedAt?: string | Date
 }
 
 interface ProductCarouselProps {
@@ -33,8 +34,25 @@ interface ProductCarouselProps {
 export default function ProductCarousel({ products, autoPlay = true, interval = 5000 }: ProductCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0)
+  const [itemsPerPage, setItemsPerPage] = useState(3)
 
-  const itemsPerPage = 3 // Show 3 products at a time
+  // Update items per page based on screen size
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      if (window.innerWidth < 640) {
+        setItemsPerPage(1) // Mobile: 1 item
+      } else if (window.innerWidth < 1024) {
+        setItemsPerPage(2) // Tablet: 2 items
+      } else {
+        setItemsPerPage(3) // Desktop: 3 items
+      }
+    }
+
+    updateItemsPerPage()
+    window.addEventListener('resize', updateItemsPerPage)
+    return () => window.removeEventListener('resize', updateItemsPerPage)
+  }, [])
+
   const maxIndex = Math.max(0, products.length - itemsPerPage)
 
   useEffect(() => {
@@ -82,7 +100,7 @@ export default function ProductCarousel({ products, autoPlay = true, interval = 
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product as any} />
             ))}
           </motion.div>
         </AnimatePresence>

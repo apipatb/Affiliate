@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { autoCategorizeBulk, getCategoryPlaceholderImage } from '@/lib/category-matcher'
+import { getShopeeProductMediaFromHTML } from '@/lib/shopee-html-scraper'
 import { revalidatePath } from 'next/cache'
 
 interface CSVProduct {
@@ -14,6 +15,7 @@ interface CSVProduct {
   commission: string
   productLink: string
   affiliateLink: string
+  imageUrl?: string // Optional image URL from CSV
 }
 
 function parseCSV(csvText: string): CSVProduct[] {
@@ -40,6 +42,7 @@ function parseCSV(csvText: string): CSVProduct[] {
         commission: cleaned[6],
         productLink: cleaned[7],
         affiliateLink: cleaned[8],
+        imageUrl: cleaned[9] || undefined, // Optional 10th column
       })
     }
   }
@@ -167,8 +170,13 @@ export async function POST(request: NextRequest) {
     const imported = []
     const skipped = []
     const errors = []
+    let processedCount = 0
+
+    console.log(`[Bulk Import] 🚀 Starting import of ${products.length} products...`)
 
     for (const product of products) {
+      processedCount++
+      console.log(`[Bulk Import] 📦 Processing ${processedCount}/${products.length}: ${product.title.substring(0, 50)}...`)
       try {
         // Check if product already exists (by affiliateUrl)
         const existingProduct = await prisma.product.findFirst({
@@ -189,10 +197,19 @@ export async function POST(request: NextRequest) {
         const categoryId = autoCategorizeBulk(product.title, availableCategories)
         const category = availableCategories.find(c => c.id === categoryId)
 
-        // Use category-based placeholder image
-        // Note: Shopee API blocks requests, so we use placeholder images
-        const imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
-        console.log(`[Bulk Import] Using ${category?.name} placeholder for: ${product.title.substring(0, 50)}...`)
+        // Determine image URL (priority: CSV > Shopee API > Placeholder)
+        let imageUrl: string
+        let mediaType: 'IMAGE' | 'VIDEO' = 'IMAGE'
+
+        if (product.imageUrl && product.imageUrl.trim()) {
+          // Use image URL from CSV if provided
+          imageUrl = product.imageUrl.trim()
+          console.log(`[Bulk Import] 📷 Using CSV image`)
+        } else {
+          // Use placeholder (auto-scraping doesn't work due to Shopee blocking)
+          imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
+          console.log(`[Bulk Import] 🎨 Using ${category?.name} placeholder (no imageUrl in CSV)`)
+        }
 
         // Create product in database
         const created = await prisma.product.create({
@@ -202,7 +219,7 @@ export async function POST(request: NextRequest) {
             price: product.price,
             affiliateUrl: product.affiliateLink,
             imageUrl,
-            mediaType: 'IMAGE',
+            mediaType,
             categoryId,
             featured,
           },
@@ -225,6 +242,7 @@ export async function POST(request: NextRequest) {
 
     // Revalidate pages after bulk import
     if (imported.length > 0) {
+      console.log(`[Bulk Import] 🔄 Revalidating pages...`)
       revalidatePath('/', 'layout')
       revalidatePath('/products')
       revalidatePath('/categories')
@@ -232,6 +250,8 @@ export async function POST(request: NextRequest) {
         revalidatePath('/featured')
       }
     }
+
+    console.log(`[Bulk Import] ✅ Completed! Imported: ${imported.length}, Skipped: ${skipped.length}, Failed: ${errors.length}`)
 
     return NextResponse.json({
       success: true,
@@ -242,6 +262,7 @@ export async function POST(request: NextRequest) {
       products: imported,
       skippedProducts: skipped,
       errors,
+      message: `สำเร็จ! นำเข้า ${imported.length} สินค้า${skipped.length > 0 ? `, ข้าม ${skipped.length} (ซ้ำ)` : ''}${errors.length > 0 ? `, ล้มเหลว ${errors.length}` : ''}`,
     })
   } catch (error) {
     console.error('Error in bulk import:', error)

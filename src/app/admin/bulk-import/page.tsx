@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, CheckCircle, XCircle, AlertCircle, Minus } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, AlertCircle, Minus, Image, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 
 interface ImportResult {
   productId: string
@@ -76,6 +77,32 @@ export default function BulkImportPage() {
         <p className="text-slate-600 dark:text-slate-400 mt-2">
           อัพโหลดไฟล์ CSV จาก Shopee Affiliate เพื่อ import สินค้าหลายรายการพร้อมกัน
         </p>
+      </div>
+
+      {/* Important Notice */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-8">
+        <div className="flex items-start gap-4">
+          <Image className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
+          <div className="flex-1">
+            <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-2">
+              🖼️ ต้องการรูปภาพจริงจาก Shopee?
+            </h3>
+            <p className="text-blue-800 dark:text-blue-200 text-sm mb-3">
+              เพิ่ม column <code className="bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded font-mono">imageUrl</code> ใน CSV ของคุณ (column ที่ 10)
+            </p>
+            <Link
+              href="/admin/image-extractor"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+            >
+              <Image className="w-4 h-4" />
+              ไปที่เครื่องมือดึงรูป
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+            <p className="text-blue-700 dark:text-blue-300 text-xs mt-3">
+              💡 ไม่ใส่ imageUrl = ใช้รูป placeholder สวยๆ ตามหมวดหมู่
+            </p>
+          </div>
+        </div>
       </div>
 
       {!result ? (

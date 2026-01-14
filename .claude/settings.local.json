@@ -37,7 +37,8 @@
       "Bash(npm run update-images:*)",
       "Bash(git restore:*)",
       "Bash(npm run dev:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(head:*)"
     ]
   }
 }

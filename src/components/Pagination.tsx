@@ -19,6 +19,9 @@ export default function Pagination({ currentPage, totalPages, baseUrl }: Paginat
     const params = new URLSearchParams(searchParams.toString())
     params.set('page', page.toString())
     router.push(`${baseUrl}?${params.toString()}`)
+
+    // Scroll to top smoothly when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const getPageNumbers = () => {

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/ProductCard'
 import ProductFilters from '@/components/ProductFilters'
 import Pagination from '@/components/Pagination'
+import BackToTop from '@/components/BackToTop'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -92,11 +93,24 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           {/* Products Grid */}
           <div className="flex-1">
             {products.length === 0 ? (
-              <div className="text-center py-16 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                <p className="text-xl text-slate-700 dark:text-slate-200">ไม่พบสินค้า</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                  ลองปรับการค้นหาหรือตัวกรองของคุณ
-                </p>
+              <div className="text-center py-20 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <div className="max-w-sm mx-auto">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                    <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                  </div>
+                  <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">ไม่พบสินค้า</p>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    ลองเลือกหมวดหมู่อื่นหรือค้นหาด้วยคำค้นที่ต่างกัน
+                  </p>
+                  <button
+                    onClick={() => window.location.href = '/products'}
+                    className="mt-6 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    ดูสินค้าทั้งหมด
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -120,6 +134,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           </div>
         </div>
       </div>
+      <BackToTop />
     </div>
   )
 }

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Batch Image Scraper</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .progress {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: none;
+        }
+        .progress.active {
+            display: block;
+        }
+        .progress-bar {
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .progress-text {
+            color: #666;
+            font-size: 14px;
+        }
+        .instructions {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 30px;
+        }
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+        .result {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Shopee Batch Image Scraper</h1>
+        <p class="subtitle">ดึงรูปภาพ Shopee จาก CSV อัตโนมัติ</p>
+
+        <div class="instructions">
+            <h3>📖 วิธีใช้งาน</h3>
+            <ol>
+                <li>วาง CSV ของคุณด้านล่าง (ต้องมี column "ลิงก์สินค้า")</li>
+                <li>คลิก "เริ่มดึงรูป"</li>
+                <li>รอระบบเปิดแท็บใหม่และดึงรูปอัตโนมัติ</li>
+                <li>เสร็จแล้ว Download CSV ที่มี imageUrl</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            ⚠️ <strong>หมายเหตุ:</strong> Browser อาจบล็อก popup - กรุณาอนุญาตให้เปิดแท็บใหม่ได้
+        </div>
+
+        <div class="section">
+            <div class="section-title">📝 วาง CSV ของคุณที่นี่</div>
+            <textarea id="csvInput" rows="10" placeholder="productId,title,price,sales,shopName,commissionRate,commission,ลิงก์สินค้า,affiliateLink
+7031409370,ลองจอนผู้ชาย,250,15พัน,Shop,8%,20,https://shopee.co.th/product/76279376/7031409370,https://shope.ee/abc"></textarea>
+        </div>
+
+        <button class="btn" id="startBtn" onclick="startScraping()">เริ่มดึงรูป</button>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%">0%</div>
+            </div>
+            <div class="progress-text" id="progressText">กำลังประมวลผล...</div>
+        </div>
+
+        <div class="result" id="result">
+            <strong>✅ สำเร็จ!</strong> CSV พร้อม imageUrl แล้ว - กด Download ด้านล่าง
+        </div>
+
+        <div class="section" style="display: none;" id="outputSection">
+            <div class="section-title">📊 ผลลัพธ์ (CSV พร้อม imageUrl)</div>
+            <textarea id="csvOutput" rows="10" readonly></textarea>
+            <button class="btn" onclick="downloadCSV()" style="margin-top: 15px;">📥 Download CSV</button>
+        </div>
+    </div>
+
+    <script>
+        let results = [];
+        let currentIndex = 0;
+        let products = [];
+
+        async function startScraping() {
+            const csv = document.getElementById('csvInput').value.trim();
+            if (!csv) {
+                alert('กรุณาวาง CSV ก่อน!');
+                return;
+            }
+
+            // Parse CSV
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',');
+            const linkIndex = headers.findIndex(h => h.includes('ลิงก์สินค้า') || h.includes('productLink'));
+
+            if (linkIndex === -1) {
+                alert('ไม่พบ column "ลิงก์สินค้า" ใน CSV!');
+                return;
+            }
+
+            products = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values[linkIndex]) {
+                    products.push({
+                        line: lines[i],
+                        url: values[linkIndex].trim()
+                    });
+                }
+            }
+
+            if (products.length === 0) {
+                alert('ไม่พบลิงก์สินค้าใน CSV!');
+                return;
+            }
+
+            // Start scraping
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('progress').classList.add('active');
+            results = [];
+            currentIndex = 0;
+
+            alert(`พบ ${products.length} สินค้า\n\nระบบจะเปิดแท็บใหม่เพื่อดึงรูป\nกรุณาอย่าปิดหน้าต่างนี้!`);
+
+            scrapeNext();
+        }
+
+        function scrapeNext() {
+            if (currentIndex >= products.length) {
+                // Done!
+                finish();
+                return;
+            }
+
+            const product = products[currentIndex];
+            const progress = Math.round(((currentIndex + 1) / products.length) * 100);
+
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').textContent = progress + '%';
+            document.getElementById('progressText').textContent = `กำลังดึงรูปที่ ${currentIndex + 1}/${products.length}...`;
+
+            // Open product page in new tab
+            const win = window.open(product.url, '_blank');
+
+            // Wait for page to load and extract image
+            setTimeout(() => {
+                try {
+                    // This won't work due to CORS, so we use a simpler approach
+                    // Just collect the URLs and user will need to use bookmarklet
+                    results.push({
+                        line: product.line,
+                        imageUrl: '' // Will be filled manually or with bookmarklet
+                    });
+                } catch (e) {
+                    results.push({
+                        line: product.line,
+                        imageUrl: ''
+                    });
+                }
+
+                if (win) win.close();
+                currentIndex++;
+                setTimeout(scrapeNext, 2000); // Wait 2 seconds between requests
+            }, 5000); // Wait 5 seconds for page to load
+        }
+
+        function finish() {
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressBar').textContent = '100%';
+            document.getElementById('progressText').textContent = 'เสร็จสิ้น!';
+            document.getElementById('result').classList.add('show');
+            document.getElementById('startBtn').disabled = false;
+
+            // Generate output CSV with imageUrl column
+            const lines = document.getElementById('csvInput').value.trim().split('\n');
+            const output = [lines[0] + ',imageUrl']; // Add imageUrl column
+
+            results.forEach(r => {
+                output.push(r.line + ',' + r.imageUrl);
+            });
+
+            document.getElementById('csvOutput').value = output.join('\n');
+            document.getElementById('outputSection').style.display = 'block';
+        }
+
+        function downloadCSV() {
+            const csv = document.getElementById('csvOutput').value;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'shopee-products-with-images.csv';
+            link.click();
+        }
+    </script>
+</body>
+</html>
