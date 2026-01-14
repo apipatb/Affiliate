@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, FolderOpen, ArrowLeft, LogOut, User, Shield } from 'lucide-react'
+import { LayoutDashboard, Package, FolderOpen, ArrowLeft, LogOut, User, Shield, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/admin', label: 'แดชบอร์ด', icon: LayoutDashboard },
   { href: '/admin/products', label: 'สินค้า', icon: Package },
   { href: '/admin/categories', label: 'หมวดหมู่', icon: FolderOpen },
+  { href: '/admin/import', label: 'Import Shopee', icon: Download },
 ]
 
 interface UserSession {

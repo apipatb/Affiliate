@@ -17,7 +17,21 @@
       "Bash(~/.git-credentials)",
       "Bash(GIT_CURL_VERBOSE=1 GIT_TRACE=1 git push:*)",
       "Bash(kill:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(git commit:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel:*)",
+      "Bash(basename:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(sudo rm:*)",
+      "Bash(lsof:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(curl -s https://affiliate-golf-review.vercel.app)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }
