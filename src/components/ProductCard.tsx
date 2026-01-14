@@ -2,6 +2,7 @@
 
 import { ArrowRight, Star } from 'lucide-react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import type { Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -16,7 +17,13 @@ export default function ProductCard({ product }: { product: Product }) {
   const buyUrl = `/products/${product.id}/go`
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
+    >
       <Link href={`/products/${product.id}`}>
         <div className="aspect-square bg-slate-100 relative overflow-hidden">
           {product.mediaType === 'VIDEO' ? (
@@ -79,6 +86,6 @@ export default function ProductCard({ product }: { product: Product }) {
           </a>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

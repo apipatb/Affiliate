@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import ProductCarousel from '@/components/ProductCarousel'
 import ProductCard from '@/components/ProductCard'
 import { Metadata } from 'next'
 import { Star } from 'lucide-react'
@@ -44,12 +45,19 @@ export default async function FeaturedPage() {
               ทีมงานกำลังคัดสรรสินค้าคุณภาพมาแนะนำให้คุณ
             </p>
           </div>
+        ) : products.length >= 3 ? (
+          <>
+            <p className="text-sm text-slate-700 dark:text-slate-300 mb-6">
+              แสดง {products.length} สินค้า
+            </p>
+            <ProductCarousel products={products as any} autoPlay={true} interval={4000} />
+          </>
         ) : (
           <>
             <p className="text-sm text-slate-700 dark:text-slate-300 mb-6">
               แสดง {products.length} สินค้า
             </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product as any} />
               ))}

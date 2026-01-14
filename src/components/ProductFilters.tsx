@@ -37,6 +37,9 @@ export default function ProductFilters({
       params.delete(key)
     }
 
+    // Reset to page 1 when changing filters
+    params.delete('page')
+
     router.push(`/products?${params.toString()}`)
   }
 
@@ -99,17 +102,6 @@ export default function ProductFilters({
           ))}
         </div>
       </div>
-
-      {/* Clear Filters */}
-      {hasFilters && (
-        <button
-          onClick={clearFilters}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-        >
-          <X className="w-4 h-4" />
-          ล้างตัวกรองทั้งหมด
-        </button>
-      )}
     </div>
   )
 }

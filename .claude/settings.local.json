@@ -35,7 +35,9 @@
       "Bash(npm run db:seed:clean:*)",
       "Bash(ls:*)",
       "Bash(npm run update-images:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(npm run dev:*)",
+      "Bash(xargs kill:*)"
     ]
   }
 }

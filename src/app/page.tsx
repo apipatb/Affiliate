@@ -1,13 +1,13 @@
 import { ArrowRight, Star, ShieldCheck, Zap, ShoppingBag } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
-import ProductCard from "@/components/ProductCard"
+import ProductCarousel from "@/components/ProductCarousel"
 
 async function getFeaturedProducts() {
   return prisma.product.findMany({
     where: { featured: true },
     include: { category: true },
-    take: 3,
+    orderBy: { createdAt: 'desc' },
   })
 }
 
@@ -91,11 +91,7 @@ export default async function Home() {
             </p>
           </div>
           {featuredProducts.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <ProductCarousel products={featuredProducts as any} autoPlay={true} interval={5000} />
           ) : (
             <div className="text-center py-12 text-slate-700 dark:text-slate-300">
               ยังไม่มีสินค้าแนะนำ
