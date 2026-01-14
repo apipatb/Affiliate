@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { autoCategorizeBulk } from '@/lib/category-matcher'
+import { autoCategorizeBulk, getCategoryPlaceholderImage } from '@/lib/category-matcher'
 
 interface CSVProduct {
   productId: string
@@ -172,8 +172,10 @@ export async function POST(request: NextRequest) {
         const categoryId = autoCategorizeBulk(product.title, availableCategories)
         const category = availableCategories.find(c => c.id === categoryId)
 
-        // Fetch product image
-        const imageUrl = await fetchProductImage(product.productLink)
+        // Use category-based placeholder image
+        // Note: Shopee API blocks requests, so we use placeholder images
+        const imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
+        console.log(`[Bulk Import] Using ${category?.name} placeholder for: ${product.title.substring(0, 50)}...`)
 
         // Create product in database
         const created = await prisma.product.create({

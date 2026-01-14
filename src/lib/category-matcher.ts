@@ -108,3 +108,18 @@ export function suggestCategory(productTitle: string): string {
 
   return 'home' // default
 }
+
+// Placeholder images for categories when product image is not available
+export function getCategoryPlaceholderImage(categorySlug: string): string {
+  const placeholders: Record<string, string> = {
+    'fashion': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=500',
+    'shoes-bags': 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500',
+    'beauty': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500',
+    'electronics': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=500',
+    'home': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=500',
+    'sports': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500',
+    'care-cleaning': 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=500',
+  }
+
+  return placeholders[categorySlug] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
+}
