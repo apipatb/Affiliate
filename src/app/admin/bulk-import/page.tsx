@@ -1,28 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
-
-interface Category {
-  id: string
-  name: string
-  slug: string
-}
 
 interface ImportResult {
   productId: string
   title: string
   id?: string
+  category?: string
   error?: string
 }
 
 export default function BulkImportPage() {
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
-  const [categoryId, setCategoryId] = useState('')
   const [featured, setFeatured] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{
     total: number
@@ -32,25 +25,9 @@ export default function BulkImportPage() {
     errors: ImportResult[]
   } | null>(null)
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  async function fetchCategories() {
-    try {
-      const res = await fetch('/api/categories')
-      if (res.ok) {
-        const data = await res.json()
-        setCategories(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch categories:', error)
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!file || !categoryId) return
+    if (!file) return
 
     setLoading(true)
     setResult(null)
@@ -58,7 +35,6 @@ export default function BulkImportPage() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('categoryId', categoryId)
       formData.append('featured', featured.toString())
 
       const res = await fetch('/api/shopee/bulk-import', {
@@ -129,23 +105,10 @@ export default function BulkImportPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-black dark:text-slate-200">
-                หมวดหมู่ <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-black dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent"
-                required
-              >
-                <option value="">เลือกหมวดหมู่สำหรับสินค้าทั้งหมด</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
+                <strong>✨ Auto-Categorization:</strong> ระบบจะจัดหมวดหมู่สินค้าอัตโนมัติจากชื่อสินค้า ไม่ต้องเลือกเอง!
+              </p>
             </div>
 
             <div className="flex items-center">
@@ -228,6 +191,11 @@ export default function BulkImportPage() {
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
                           ID: {product.productId}
+                          {product.category && (
+                            <span className="ml-2 text-blue-600 dark:text-blue-400">
+                              • หมวดหมู่: {product.category}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -270,7 +238,6 @@ export default function BulkImportPage() {
               onClick={() => {
                 setResult(null)
                 setFile(null)
-                setCategoryId('')
                 setFeatured(false)
               }}
               className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
@@ -297,13 +264,17 @@ export default function BulkImportPage() {
           <li>เข้า <a href="https://affiliate.shopee.co.th/offer/product_offer" target="_blank" className="underline hover:text-blue-600">Shopee Affiliate</a></li>
           <li>เลือกสินค้าหลายรายการ → คลิก "ส่งออกลิงก์"</li>
           <li>ดาวน์โหลดไฟล์ CSV</li>
-          <li>อัพโหลดไฟล์ CSV ที่นี่</li>
-          <li>เลือกหมวดหมู่และคลิก "Import สินค้า"</li>
+          <li>อัพโหลดไฟล์ CSV ที่นี่ และคลิก "Import สินค้า"</li>
         </ol>
         <div className="mt-3 p-3 bg-white dark:bg-blue-950/30 rounded border border-blue-300 dark:border-blue-700">
           <p className="text-xs text-blue-700 dark:text-blue-400">
-            <strong>📝 หมายเหตุ:</strong> ระบบจะดึงรูปภาพสินค้าอัตโนมัติจากลิงก์สินค้า และใช้ Affiliate Link ที่มีในไฟล์ CSV
+            <strong>📝 หมายเหตุ:</strong> ระบบจะทำงานอัตโนมัติ:
           </p>
+          <ul className="text-xs text-blue-700 dark:text-blue-400 mt-1 space-y-0.5 list-disc list-inside ml-2">
+            <li>จัดหมวดหมู่สินค้าอัตโนมัติจากชื่อสินค้า</li>
+            <li>ดึงรูปภาพสินค้าจริงจาก Shopee</li>
+            <li>ใช้ Affiliate Link พร้อมค่าคอมมิชชั่น</li>
+          </ul>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
+import { autoCategorizeBulk } from '@/lib/category-matcher'
 
 interface CSVProduct {
   productId: string
@@ -104,24 +105,23 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
-    const categoryId = formData.get('categoryId') as string
     const featured = formData.get('featured') === 'true'
 
-    if (!file || !categoryId) {
+    if (!file) {
       return NextResponse.json(
-        { error: 'file and categoryId are required' },
+        { error: 'file is required' },
         { status: 400 }
       )
     }
 
-    // Validate categoryId exists
-    const categoryExists = await prisma.category.findUnique({
-      where: { id: categoryId }
+    // Get all available categories for auto-categorization
+    const availableCategories = await prisma.category.findMany({
+      select: { id: true, name: true, slug: true }
     })
 
-    if (!categoryExists) {
+    if (availableCategories.length === 0) {
       return NextResponse.json(
-        { error: 'Invalid categoryId: category does not exist' },
+        { error: 'No categories found. Please create categories first.' },
         { status: 400 }
       )
     }
@@ -143,6 +143,10 @@ export async function POST(request: NextRequest) {
 
     for (const product of products) {
       try {
+        // Auto-categorize based on product title
+        const categoryId = autoCategorizeBulk(product.title, availableCategories)
+        const category = availableCategories.find(c => c.id === categoryId)
+
         // Fetch product image
         const imageUrl = await fetchProductImage(product.productLink)
 
@@ -164,6 +168,7 @@ export async function POST(request: NextRequest) {
           productId: product.productId,
           title: product.title,
           id: created.id,
+          category: category?.name || 'Unknown',
         })
       } catch (error) {
         errors.push({
