@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, AlertCircle, Minus } from 'lucide-react'
 
 interface ImportResult {
   productId: string
@@ -20,8 +20,10 @@ export default function BulkImportPage() {
   const [result, setResult] = useState<{
     total: number
     imported: number
+    skipped: number
     failed: number
     products: ImportResult[]
+    skippedProducts: ImportResult[]
     errors: ImportResult[]
   } | null>(null)
 
@@ -157,7 +159,7 @@ export default function BulkImportPage() {
           {/* Summary */}
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
             <h2 className="text-xl font-bold mb-4 text-black dark:text-slate-100">ผลการ Import</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{result.total}</div>
                 <div className="text-sm text-blue-800 dark:text-blue-300">ทั้งหมด</div>
@@ -165,6 +167,10 @@ export default function BulkImportPage() {
               <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">{result.imported}</div>
                 <div className="text-sm text-green-800 dark:text-green-300">สำเร็จ</div>
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{result.skipped}</div>
+                <div className="text-sm text-yellow-800 dark:text-yellow-300">ข้าม (ซ้ำ)</div>
               </div>
               <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                 <div className="text-2xl font-bold text-red-600 dark:text-red-400">{result.failed}</div>
@@ -196,6 +202,33 @@ export default function BulkImportPage() {
                               • หมวดหมู่: {product.category}
                             </span>
                           )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Skipped Products */}
+          {result.skippedProducts && result.skippedProducts.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+              <h3 className="font-bold mb-4 text-yellow-700 dark:text-yellow-400 flex items-center gap-2">
+                <Minus className="w-5 h-5" />
+                สินค้าที่ข้าม (มีอยู่แล้ว) ({result.skipped})
+              </h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {result.skippedProducts.map((product, index) => (
+                  <div key={index} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                    <div className="flex items-start gap-2">
+                      <Minus className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-black dark:text-slate-100 truncate">
+                          {product.title}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          ID: {product.productId}
                         </div>
                       </div>
                     </div>

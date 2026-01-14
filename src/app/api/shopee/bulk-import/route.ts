@@ -164,10 +164,26 @@ export async function POST(request: NextRequest) {
 
     // Import products
     const imported = []
+    const skipped = []
     const errors = []
 
     for (const product of products) {
       try {
+        // Check if product already exists (by affiliateUrl)
+        const existingProduct = await prisma.product.findFirst({
+          where: { affiliateUrl: product.affiliateLink }
+        })
+
+        if (existingProduct) {
+          console.log(`[Bulk Import] ⏭️  Skipping duplicate: ${product.title.substring(0, 50)}...`)
+          skipped.push({
+            productId: product.productId,
+            title: product.title,
+            reason: 'Product already exists'
+          })
+          continue
+        }
+
         // Auto-categorize based on product title
         const categoryId = autoCategorizeBulk(product.title, availableCategories)
         const category = availableCategories.find(c => c.id === categoryId)
@@ -210,8 +226,10 @@ export async function POST(request: NextRequest) {
       success: true,
       total: products.length,
       imported: imported.length,
+      skipped: skipped.length,
       failed: errors.length,
       products: imported,
+      skippedProducts: skipped,
       errors,
     })
   } catch (error) {
