@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
+import { shopeeAPI } from '@/lib/shopee-affiliate'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface ShopeeProductData {
@@ -8,12 +9,45 @@ interface ShopeeProductData {
   price: number
   imageUrl: string
   affiliateUrl: string
+  commission?: number
+  commissionRate?: number
 }
 
-async function fetchShopeeProduct(url: string): Promise<ShopeeProductData | null> {
+/**
+ * Fetch product using Shopee Affiliate API (preferred method)
+ */
+async function fetchShopeeProductViaAPI(url: string): Promise<ShopeeProductData | null> {
+  try {
+    const product = await shopeeAPI.getProductByUrl(url)
+
+    if (!product) {
+      return null
+    }
+
+    // Generate affiliate link
+    const affiliateLink = await shopeeAPI.generateAffiliateLink(product.itemId, product.shopId)
+
+    return {
+      title: product.productName,
+      description: product.productName, // Shopee API might not provide description
+      price: product.price,
+      imageUrl: product.imageUrl,
+      affiliateUrl: affiliateLink || product.productLink,
+      commission: product.commission,
+      commissionRate: product.commissionRate,
+    }
+  } catch (error) {
+    console.error('Shopee Affiliate API error:', error)
+    return null
+  }
+}
+
+/**
+ * Fallback: Fetch product using public Shopee API
+ */
+async function fetchShopeeProductPublic(url: string): Promise<ShopeeProductData | null> {
   try {
     // Extract shop_id and item_id from Shopee URL
-    // Format: https://shopee.co.th/product-name-i.{shop_id}.{item_id}
     const urlPattern = /shopee\.co\.th\/.*-i\.(\d+)\.(\d+)/
     const match = url.match(urlPattern)
 
@@ -23,7 +57,7 @@ async function fetchShopeeProduct(url: string): Promise<ShopeeProductData | null
 
     const [, shopId, itemId] = match
 
-    // Shopee API v2 endpoint (public)
+    // Shopee API v4 endpoint (public)
     const apiUrl = `https://shopee.co.th/api/v4/item/get?itemid=${itemId}&shopid=${shopId}`
 
     const response = await fetch(apiUrl, {
@@ -48,7 +82,7 @@ async function fetchShopeeProduct(url: string): Promise<ShopeeProductData | null
     // Extract product information
     const title = item.name || 'Unknown Product'
     const description = item.description || title
-    const price = item.price ? item.price / 100000 : 0 // Shopee stores price in special format
+    const price = item.price ? item.price / 100000 : 0
     const imageUrl = item.image
       ? `https://down-th.img.susercontent.com/file/${item.image}`
       : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
@@ -61,9 +95,29 @@ async function fetchShopeeProduct(url: string): Promise<ShopeeProductData | null
       affiliateUrl: url,
     }
   } catch (error) {
-    console.error('Error fetching Shopee product:', error)
+    console.error('Error fetching Shopee product (public API):', error)
     return null
   }
+}
+
+/**
+ * Main function: Try Affiliate API first, fallback to public API
+ */
+async function fetchShopeeProduct(url: string): Promise<ShopeeProductData | null> {
+  // Try Shopee Affiliate API first (if credentials are configured)
+  const hasCredentials = process.env.SHOPEE_APP_ID && process.env.SHOPEE_SECRET
+
+  if (hasCredentials) {
+    console.log('Using Shopee Affiliate API...')
+    const result = await fetchShopeeProductViaAPI(url)
+    if (result) {
+      return result
+    }
+    console.log('Affiliate API failed, falling back to public API...')
+  }
+
+  // Fallback to public API
+  return await fetchShopeeProductPublic(url)
 }
 
 export async function POST(request: NextRequest) {
