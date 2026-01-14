@@ -64,34 +64,59 @@ function parsePrice(priceStr: string): number {
 
 async function fetchProductImage(productLink: string): Promise<string> {
   try {
-    // Extract shop_id and item_id from Shopee URL
-    const urlPattern = /shopee\.co\.th\/.*-i\.(\d+)\.(\d+)/
-    const match = productLink.match(urlPattern)
+    let shopId: string | undefined
+    let itemId: string | undefined
 
-    if (!match) {
+    // Try format 1: /product/{shop_id}/{item_id}
+    const productPattern = /shopee\.co\.th\/product\/(\d+)\/(\d+)/
+    let match = productLink.match(productPattern)
+
+    if (match) {
+      shopId = match[1]
+      itemId = match[2]
+    } else {
+      // Try format 2: /-i.{shop_id}.{item_id}
+      const iPattern = /shopee\.co\.th\/.*-i\.(\d+)\.(\d+)/
+      match = productLink.match(iPattern)
+      if (match) {
+        shopId = match[1]
+        itemId = match[2]
+      }
+    }
+
+    if (!shopId || !itemId) {
+      console.log(`[Image Fetch] Cannot parse URL: ${productLink}`)
       return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
     }
 
-    const [, shopId, itemId] = match
     const apiUrl = `https://shopee.co.th/api/v4/item/get?itemid=${itemId}&shopid=${shopId}`
+    console.log(`[Image Fetch] Fetching from: ${apiUrl}`)
 
     const response = await fetch(apiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://shopee.co.th/',
+        'Accept': 'application/json',
       }
     })
 
     if (response.ok) {
       const data = await response.json()
       if (data.data?.image) {
-        return `https://down-th.img.susercontent.com/file/${data.data.image}`
+        const imageUrl = `https://down-th.img.susercontent.com/file/${data.data.image}`
+        console.log(`[Image Fetch] Success: ${imageUrl}`)
+        return imageUrl
+      } else {
+        console.log('[Image Fetch] No image in response:', JSON.stringify(data).substring(0, 200))
       }
+    } else {
+      console.log(`[Image Fetch] Failed with status: ${response.status}`)
     }
   } catch (error) {
-    console.error('Error fetching product image:', error)
+    console.error('[Image Fetch] Error:', error)
   }
 
+  console.log('[Image Fetch] Using fallback image')
   return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
 }
 

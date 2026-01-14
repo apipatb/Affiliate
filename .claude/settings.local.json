@@ -32,7 +32,8 @@
       "Bash(curl:*)",
       "Bash(python3:*)",
       "Bash(npx tsx:*)",
-      "Bash(npm run db:seed:clean:*)"
+      "Bash(npm run db:seed:clean:*)",
+      "Bash(ls:*)"
     ]
   }
 }
