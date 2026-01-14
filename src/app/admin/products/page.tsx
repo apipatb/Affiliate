@@ -28,7 +28,6 @@ const ITEMS_PER_PAGE = 20
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -49,73 +48,58 @@ export default function AdminProducts() {
   // New state for search, pagination, and bulk operations
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(0)
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
 
+  // Fetch products on initial load and when filters/page change
   useEffect(() => {
-    fetchProducts()
     fetchCategories()
   }, [])
 
   useEffect(() => {
-    // Filter products based on search term and category
-    let filtered = [...products]
+    fetchProducts()
+  }, [currentPage, categoryFilter, searchTerm])
 
-    console.log('[Filter] ==================== START ====================')
-    console.log('[Filter] Total products:', products.length)
-    console.log('[Filter] Category filter value:', categoryFilter, 'Type:', typeof categoryFilter)
-    console.log('[Filter] Search term:', searchTerm)
+  const fetchProducts = async () => {
+    setIsLoading(true)
 
-    // Log first few products for debugging
-    if (products.length > 0) {
-      console.log('[Filter] Sample product categoryIds:', products.slice(0, 3).map(p => ({
-        title: p.title.substring(0, 30),
-        categoryId: p.categoryId,
-        categoryName: p.category.name
-      })))
-    }
+    // Build query parameters
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      limit: ITEMS_PER_PAGE.toString(),
+    })
 
     if (categoryFilter !== 'all') {
-      console.log('[Filter] Applying category filter:', categoryFilter)
-      const beforeCount = filtered.length
-
-      filtered = filtered.filter((p) => {
-        const match = p.categoryId === categoryFilter
-        if (match) {
-          console.log('[Filter] ✓ Match:', p.title.substring(0, 40), 'ID:', p.categoryId)
-        }
-        return match
-      })
-
-      console.log(`[Filter] Category filter: ${beforeCount} → ${filtered.length} products`)
+      params.append('categoryId', categoryFilter)
     }
 
     if (searchTerm) {
-      const beforeCount = filtered.length
-      filtered = filtered.filter(
-        (p) =>
-          p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.category.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      console.log(`[Filter] Search filter: ${beforeCount} → ${filtered.length} products`)
+      params.append('search', searchTerm)
     }
 
-    console.log('[Filter] ==================== RESULT ====================')
-    console.log('[Filter] Final filtered count:', filtered.length)
-    console.log('[Filter] ==================== END ====================')
+    console.log('[Fetch] Fetching products with params:', params.toString())
 
-    setFilteredProducts(filtered)
-    setCurrentPage(1) // Reset to page 1 when filtering
-  }, [searchTerm, categoryFilter, products])
+    try {
+      const res = await fetch(`/api/products?${params.toString()}`)
+      const data = await res.json()
 
-  const fetchProducts = async () => {
-    const res = await fetch('/api/products?limit=10000') // Get all products for admin
-    const data = await res.json()
-    setProducts(data.data || data) // Handle both old and new API format
-    setFilteredProducts(data.data || data)
-    setIsLoading(false)
+      console.log('[Fetch] API Response:', {
+        productsCount: data.data?.length || 0,
+        pagination: data.pagination
+      })
+
+      setProducts(data.data || [])
+      setTotalPages(data.pagination?.totalPages || 1)
+      setTotalProducts(data.pagination?.total || 0)
+    } catch (error) {
+      console.error('[Fetch] Error fetching products:', error)
+      setProducts([])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const fetchCategories = async () => {
@@ -192,13 +176,13 @@ export default function AdminProducts() {
   }
 
   const handleDeleteAll = async () => {
-    if (products.length === 0) {
+    if (totalProducts === 0) {
       alert('ไม่มีสินค้าให้ลบ')
       return
     }
 
     const confirmed = confirm(
-      `⚠️ คำเตือน: คุณกำลังจะลบสินค้าทั้งหมด ${products.length} รายการ\n\nการกระทำนี้ไม่สามารถย้อนกลับได้!\n\nพิมพ์ "DELETE" เพื่อยืนยัน`
+      `⚠️ คำเตือน: คุณกำลังจะลบสินค้าทั้งหมด ${totalProducts} รายการ\n\nการกระทำนี้ไม่สามารถย้อนกลับได้!\n\nพิมพ์ "DELETE" เพื่อยืนยัน`
     )
 
     if (!confirmed) return
@@ -243,11 +227,24 @@ export default function AdminProducts() {
   }
 
   const toggleSelectAll = () => {
-    if (selectedProducts.size === paginatedProducts.length) {
+    if (selectedProducts.size === products.length) {
       setSelectedProducts(new Set())
     } else {
-      setSelectedProducts(new Set(paginatedProducts.map((p) => p.id)))
+      setSelectedProducts(new Set(products.map((p) => p.id)))
     }
+  }
+
+  const handleFilterChange = (newFilter: string) => {
+    console.log('[UI] Category filter changed to:', newFilter)
+    setCategoryFilter(newFilter)
+    setCurrentPage(1) // Reset to page 1 when changing filter
+    setSelectedProducts(new Set()) // Clear selections
+  }
+
+  const handleSearchChange = (newSearch: string) => {
+    setSearchTerm(newSearch)
+    setCurrentPage(1) // Reset to page 1 when searching
+    setSelectedProducts(new Set()) // Clear selections
   }
 
   const openModal = (product?: Product) => {
@@ -324,14 +321,9 @@ export default function AdminProducts() {
     }
   }
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-  const endIndex = startIndex + ITEMS_PER_PAGE
-  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
-
   const goToPage = (page: number) => {
     setCurrentPage(page)
+    setSelectedProducts(new Set()) // Clear selections when changing page
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -355,14 +347,14 @@ export default function AdminProducts() {
             <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                ทั้งหมด {products.length} สินค้า
+                {categoryFilter !== 'all' || searchTerm ? `พบ ${totalProducts} จากทั้งหมด` : `ทั้งหมด ${totalProducts} สินค้า`}
               </span>
             </div>
-            {filteredProducts.length !== products.length && (
+            {(categoryFilter !== 'all' || searchTerm) && (
               <div className="flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-900/20 rounded-full">
                 <Search className="w-3 h-3 text-green-600" />
                 <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                  กรองแล้ว {filteredProducts.length} รายการ
+                  หน้า {currentPage}/{totalPages}
                 </span>
               </div>
             )}
@@ -399,12 +391,12 @@ export default function AdminProducts() {
                 type="text"
                 placeholder="พิมพ์ชื่อสินค้า, รายละเอียด หรือหมวดหมู่..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-black dark:text-white placeholder:text-slate-400 transition-all"
               />
               {searchTerm && (
                 <button
-                  onClick={() => setSearchTerm('')}
+                  onClick={() => handleSearchChange('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   ✕
@@ -420,10 +412,7 @@ export default function AdminProducts() {
             </label>
             <select
               value={categoryFilter}
-              onChange={(e) => {
-                console.log('[UI] Category filter changed to:', e.target.value)
-                setCategoryFilter(e.target.value)
-              }}
+              onChange={(e) => handleFilterChange(e.target.value)}
               className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-black dark:text-white transition-all cursor-pointer"
             >
               <option value="all">🔍 ทุกหมวดหมู่</option>
@@ -465,7 +454,7 @@ export default function AdminProducts() {
       )}
 
       {/* Delete All Button (Only show when no selection) */}
-      {selectedProducts.size === 0 && products.length > 0 && (
+      {selectedProducts.size === 0 && totalProducts > 0 && (
         <div className="mb-6 flex justify-end">
           <button
             onClick={handleDeleteAll}
@@ -487,9 +476,9 @@ export default function AdminProducts() {
                 <button
                   onClick={toggleSelectAll}
                   className="w-5 h-5 flex items-center justify-center hover:scale-110 transition-transform"
-                  title={selectedProducts.size === paginatedProducts.length && paginatedProducts.length > 0 ? 'ยกเลิกเลือกทั้งหมด' : 'เลือกทั้งหมด'}
+                  title={selectedProducts.size === products.length && products.length > 0 ? 'ยกเลิกเลือกทั้งหมด' : 'เลือกทั้งหมด'}
                 >
-                  {selectedProducts.size === paginatedProducts.length && paginatedProducts.length > 0 ? (
+                  {selectedProducts.size === products.length && products.length > 0 ? (
                     <CheckSquare className="w-5 h-5 text-primary" />
                   ) : (
                     <Square className="w-5 h-5 text-slate-400 hover:text-slate-600" />
@@ -505,7 +494,7 @@ export default function AdminProducts() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-            {paginatedProducts.map((product) => (
+            {products.map((product) => (
               <tr key={product.id} className="hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50/30 dark:hover:from-slate-700/50 dark:hover:to-blue-900/10 transition-all duration-200 group">
                 <td className="p-4">
                   <button
@@ -622,7 +611,7 @@ export default function AdminProducts() {
             ))}
           </tbody>
         </table>
-        {paginatedProducts.length === 0 && filteredProducts.length === 0 && products.length > 0 && (
+        {products.length === 0 && !isLoading && (categoryFilter !== 'all' || searchTerm) && (
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
               <Search className="w-10 h-10 text-slate-400" />
@@ -635,7 +624,7 @@ export default function AdminProducts() {
             </p>
           </div>
         )}
-        {products.length === 0 && (
+        {products.length === 0 && !isLoading && totalProducts === 0 && (
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center mb-4">
               <Plus className="w-10 h-10 text-primary" />
@@ -660,8 +649,8 @@ export default function AdminProducts() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-slate-600">
-            แสดง {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} จาก {filteredProducts.length} รายการ
+          <div className="text-sm text-slate-600 dark:text-slate-400">
+            หน้า {currentPage} จาก {totalPages} • ทั้งหมด {totalProducts.toLocaleString('th-TH')} รายการ
           </div>
           <div className="flex items-center gap-2">
             <button

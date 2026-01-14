@@ -7,7 +7,8 @@ import { revalidatePath } from 'next/cache'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  const category = searchParams.get('category')
+  const categorySlug = searchParams.get('category') // For public pages (by slug)
+  const categoryId = searchParams.get('categoryId') // For admin pages (by ID)
   const search = searchParams.get('search')
   const featured = searchParams.get('featured')
 
@@ -20,8 +21,11 @@ export async function GET(request: NextRequest) {
 
   const where: Record<string, unknown> = {}
 
-  if (category) {
-    where.category = { slug: category }
+  // Category filter (support both slug and ID)
+  if (categoryId) {
+    where.categoryId = categoryId
+  } else if (categorySlug) {
+    where.category = { slug: categorySlug }
   }
 
   if (search) {
