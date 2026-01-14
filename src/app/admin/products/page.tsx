@@ -62,34 +62,50 @@ export default function AdminProducts() {
     // Filter products based on search term and category
     let filtered = [...products]
 
-    console.log('[Filter] Starting filter...')
+    console.log('[Filter] ==================== START ====================')
     console.log('[Filter] Total products:', products.length)
-    console.log('[Filter] Category filter:', categoryFilter)
+    console.log('[Filter] Category filter value:', categoryFilter, 'Type:', typeof categoryFilter)
     console.log('[Filter] Search term:', searchTerm)
 
+    // Log first few products for debugging
+    if (products.length > 0) {
+      console.log('[Filter] Sample product categoryIds:', products.slice(0, 3).map(p => ({
+        title: p.title.substring(0, 30),
+        categoryId: p.categoryId,
+        categoryName: p.category.name
+      })))
+    }
+
     if (categoryFilter !== 'all') {
-      console.log('[Filter] Filtering by category:', categoryFilter)
+      console.log('[Filter] Applying category filter:', categoryFilter)
+      const beforeCount = filtered.length
+
       filtered = filtered.filter((p) => {
         const match = p.categoryId === categoryFilter
         if (match) {
-          console.log('[Filter] Match found:', p.title, 'Category ID:', p.categoryId)
+          console.log('[Filter] ✓ Match:', p.title.substring(0, 40), 'ID:', p.categoryId)
         }
         return match
       })
-      console.log('[Filter] After category filter:', filtered.length)
+
+      console.log(`[Filter] Category filter: ${beforeCount} → ${filtered.length} products`)
     }
 
     if (searchTerm) {
+      const beforeCount = filtered.length
       filtered = filtered.filter(
         (p) =>
           p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           p.category.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      console.log('[Filter] After search filter:', filtered.length)
+      console.log(`[Filter] Search filter: ${beforeCount} → ${filtered.length} products`)
     }
 
+    console.log('[Filter] ==================== RESULT ====================')
     console.log('[Filter] Final filtered count:', filtered.length)
+    console.log('[Filter] ==================== END ====================')
+
     setFilteredProducts(filtered)
     setCurrentPage(1) // Reset to page 1 when filtering
   }, [searchTerm, categoryFilter, products])
@@ -105,6 +121,7 @@ export default function AdminProducts() {
   const fetchCategories = async () => {
     const res = await fetch('/api/categories')
     const data = await res.json()
+    console.log('[Categories] Fetched categories:', data)
     setCategories(data)
   }
 
@@ -503,9 +520,14 @@ export default function AdminProducts() {
                   </button>
                 </td>
                 <td className="p-4">
-                  <div className="flex items-center gap-3">
+                  <a
+                    href={`/products/${product.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity group/link"
+                  >
                     {product.mediaType === 'VIDEO' ? (
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-100">
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm">
                         <video
                           src={product.imageUrl}
                           className="w-full h-full object-cover"
@@ -514,7 +536,7 @@ export default function AdminProducts() {
                           preload="metadata"
                         />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z" />
                           </svg>
                         </div>
@@ -523,58 +545,76 @@ export default function AdminProducts() {
                       <img
                         src={product.imageUrl}
                         alt={product.title}
-                        className="w-12 h-12 rounded-lg object-cover bg-slate-100"
+                        className="w-16 h-16 rounded-xl object-cover bg-slate-100 flex-shrink-0 shadow-sm"
                       />
                     )}
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-black">{product.title}</p>
+                        <p className="font-semibold text-black dark:text-white group-hover/link:text-primary transition-colors line-clamp-1">
+                          {product.title}
+                        </p>
                         {product.featured && (
-                          <Star className="w-4 h-4 text-accent fill-accent" />
+                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-slate-600 line-clamp-1">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                         {product.description}
                       </p>
                     </div>
-                  </div>
+                  </a>
                 </td>
                 <td className="p-4">
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-primary/10 to-purple-500/10 text-primary border border-primary/20">
                     {product.category.name}
                   </span>
                 </td>
-                <td className="p-4 font-medium text-black">฿{product.price.toFixed(2)}</td>
                 <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.mediaType === 'VIDEO'
-                    ? 'bg-purple-100 text-purple-600'
-                    : 'bg-blue-100 text-blue-600'
-                    }`}>
-                    {product.mediaType === 'VIDEO' ? 'วิดีโอ' : 'รูปภาพ'}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-lg font-bold text-black dark:text-white">
+                      ฿{product.price.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
                 </td>
-                <td className="p-4 text-black">{product.clicks}</td>
                 <td className="p-4">
                   <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${product.clicks > 10 ? 'bg-green-500 animate-pulse' : product.clicks > 0 ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {product.clicks.toLocaleString('th-TH')}
+                    </span>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${product.mediaType === 'VIDEO'
+                    ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border border-purple-200'
+                    : 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border border-blue-200'
+                    }`}>
+                    {product.mediaType === 'VIDEO' ? '🎬 วิดีโอ' : '🖼️ รูปภาพ'}
+                  </span>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-1.5">
                     <a
                       href={product.affiliateUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-black"
+                      className="p-2.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:scale-110"
+                      title="ดูที่ Shopee"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="w-4.5 h-4.5" />
                     </a>
                     <button
                       onClick={() => openModal(product)}
-                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-black"
+                      className="p-2.5 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl transition-all text-slate-600 dark:text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:scale-110"
+                      title="แก้ไข"
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="w-4.5 h-4.5" />
                     </button>
                     <button
                       onClick={() => handleDelete(product.id)}
-                      className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-500"
+                      className="p-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:scale-110"
+                      title="ลบ"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4.5 h-4.5" />
                     </button>
                   </div>
                 </td>
@@ -583,13 +623,36 @@ export default function AdminProducts() {
           </tbody>
         </table>
         {paginatedProducts.length === 0 && filteredProducts.length === 0 && products.length > 0 && (
-          <div className="text-center py-12 text-slate-600">
-            ไม่พบสินค้าที่ตรงกับการค้นหา
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
+              <Search className="w-10 h-10 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              ไม่พบสินค้าที่ตรงกับการค้นหา
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-center max-w-md">
+              ลองเปลี่ยนคำค้นหาหรือหมวดหมู่ดูนะครับ
+            </p>
           </div>
         )}
         {products.length === 0 && (
-          <div className="text-center py-12 text-slate-600">
-            ยังไม่มีสินค้า เพิ่มสินค้าแรกของคุณ!
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center mb-4">
+              <Plus className="w-10 h-10 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              ยังไม่มีสินค้า
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-center max-w-md mb-4">
+              เริ่มต้นเพิ่มสินค้าแรกของคุณตอนนี้เลย!
+            </p>
+            <button
+              onClick={() => openModal()}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              เพิ่มสินค้าแรก
+            </button>
           </div>
         )}
       </div>
