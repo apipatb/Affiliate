@@ -29,6 +29,9 @@ export default function Navbar() {
                                 <Link href="/products" className="text-sm font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors">
                                     สินค้า
                                 </Link>
+                                <Link href="/featured" className="text-sm font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors">
+                                    แนะนำ
+                                </Link>
                                 <Link href="/categories" className="text-sm font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors">
                                     หมวดหมู่
                                 </Link>
@@ -91,6 +94,13 @@ export default function Navbar() {
                                     onClick={closeMobileMenu}
                                 >
                                     สินค้า
+                                </Link>
+                                <Link
+                                    href="/featured"
+                                    className="text-base font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors py-2"
+                                    onClick={closeMobileMenu}
+                                >
+                                    แนะนำ
                                 </Link>
                                 <Link
                                     href="/categories"
