@@ -24,7 +24,7 @@ async function getProducts(category?: string, search?: string, page: number = 1,
   const where: Record<string, unknown> = {}
 
   if (category) {
-    where.category = { slug: category }
+    where.category = { is: { slug: category } }
   }
 
   if (search) {
