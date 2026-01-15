@@ -42,6 +42,7 @@ export default function StickyBuyButton({ productId, productTitle, price, imageU
               <img
                 src={imageUrl}
                 alt={productTitle}
+                loading="lazy"
                 className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border-2 border-slate-200 dark:border-slate-700"
               />
               <div className="flex-1 min-w-0">

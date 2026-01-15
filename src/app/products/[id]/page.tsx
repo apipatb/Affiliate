@@ -103,12 +103,14 @@ export default async function ProductPage({ params }: PageProps) {
                 loop
                 playsInline
                 controls
+                preload="metadata"
               />
             ) : (
               <img
                 src={productAny.imageUrl}
                 alt={productAny.title}
                 className="w-full h-full object-cover"
+                loading="eager"
               />
             )}
 

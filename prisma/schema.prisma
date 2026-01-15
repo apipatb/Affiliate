@@ -36,8 +36,13 @@ model Product {
   @@index([featured])
   @@index([categoryId])
   @@index([createdAt])
-  @@index([featured, createdAt])
+  @@index([clicks])
   @@index([rating])
+  @@index([price])
+  @@index([featured, createdAt])
+  @@index([categoryId, rating])
+  @@index([categoryId, clicks])
+  @@index([categoryId, price])
 }
 
 enum MediaType {

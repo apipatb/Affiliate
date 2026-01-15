@@ -37,7 +37,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 muted
                 playsInline
-                preload="metadata"
+                preload="none"
               />
               {/* Play icon overlay */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
@@ -52,6 +52,7 @@ export default function ProductCard({ product }: { product: Product }) {
             <img
               src={product.imageUrl}
               alt={product.title}
+              loading="lazy"
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
           )}
