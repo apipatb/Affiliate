@@ -18,6 +18,7 @@ import FloatingActions from '@/components/FloatingActions'
 import NewsletterPopup from '@/components/NewsletterPopup'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import CustomerReviews from '@/components/CustomerReviews'
+import ProductImageGallery from '@/components/ProductImageGallery'
 import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -44,7 +45,12 @@ interface PageProps {
 async function getProduct(id: string): Promise<ProductWithCategory | null> {
   const product = await prisma.product.findUnique({
     where: { id },
-    include: { category: true },
+    include: {
+      category: true,
+      media: {
+        orderBy: { order: 'asc' },
+      },
+    },
   })
   return product as ProductWithCategory | null
 }
@@ -140,25 +146,101 @@ export default async function ProductPage({ params }: PageProps) {
         {/* Product Detail */}
         <div className="grid lg:grid-cols-5 gap-8 mb-16">
           {/* Media */}
-          <div className={`lg:col-span-2 ${productAny.mediaType === 'VIDEO' ? 'aspect-[9/16] max-h-[450px]' : 'aspect-square max-h-[450px]'} bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden relative mx-auto w-full shadow-xl border-2 border-slate-200 dark:border-slate-700`}>
-            {productAny.mediaType === 'VIDEO' ? (
-              <video
-                src={productAny.imageUrl}
-                className="w-full h-full object-contain bg-black"
-                autoPlay
-                muted
-                loop
-                playsInline
-                controls
-                preload="metadata"
-              />
+          <div className="lg:col-span-2 relative mx-auto w-full">
+            {/* Product Image Gallery (if media exists) or Fallback */}
+            {(productAny as any).media && (productAny as any).media.length > 0 ? (
+              <div className="relative">
+                <ProductImageGallery
+                  images={(productAny as any).media}
+                  productTitle={productAny.title}
+                />
+                {/* Badges overlay on gallery */}
+                <div className="absolute top-4 right-4 flex flex-col gap-2 z-10 pointer-events-none">
+                  {isHotSale && (
+                    <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse">
+                      <Flame className="w-4 h-4 fill-white" />
+                      Hot Sale!
+                    </div>
+                  )}
+                  {hasDiscount && discountPercent > 0 && !isHotSale && (
+                    <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                      -{discountPercent}%
+                    </div>
+                  )}
+                  {productAny.isBestSeller && !isHotSale && (
+                    <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                      <Crown className="w-4 h-4 fill-white" />
+                      ขายดีที่สุด
+                    </div>
+                  )}
+                  {productAny.isLimited && !isHotSale && (
+                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                      <Award className="w-4 h-4" />
+                      Limited Edition
+                    </div>
+                  )}
+                  {isNew && !isHotSale && (
+                    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                      <Sparkles className="w-4 h-4 fill-white" />
+                      สินค้าใหม่
+                    </div>
+                  )}
+                  {productAny.featured && !isHotSale && !productAny.isBestSeller && !productAny.isLimited && !isNew && (
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse">
+                      <Star className="w-4 h-4 fill-white" />
+                      แนะนำ
+                    </div>
+                  )}
+                  {isPopular && !isHotSale && !productAny.isBestSeller && (
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                      <Heart className="w-4 h-4 fill-white" />
+                      ยอดนิยม
+                    </div>
+                  )}
+                  {isTrending && !isHotSale && !productAny.isBestSeller && (
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                      <TrendingUp className="w-4 h-4" />
+                      กำลังมาแรง
+                    </div>
+                  )}
+                </div>
+                {/* Low Stock Badge - Bottom Left */}
+                {isLowStock && (
+                  <div className="absolute bottom-4 left-4 bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse z-10">
+                    <AlertCircle className="w-4 h-4" />
+                    เหลือแค่ {product.stock} ชิ้น!
+                  </div>
+                )}
+                {/* Out of Stock Overlay */}
+                {isOutOfStock && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm z-20 rounded-2xl">
+                    <div className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-bold shadow-2xl">
+                      สินค้าหมด
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
-              <ImageZoom
-                src={productAny.imageUrl}
-                alt={productAny.title}
-                className="w-full h-full object-cover"
-              />
-            )}
+              /* Fallback to single image/video */
+              <div className={`${productAny.mediaType === 'VIDEO' ? 'aspect-[9/16] max-h-[450px]' : 'aspect-square max-h-[450px]'} bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden relative shadow-xl border-2 border-slate-200 dark:border-slate-700`}>
+                {productAny.mediaType === 'VIDEO' ? (
+                  <video
+                    src={productAny.imageUrl}
+                    className="w-full h-full object-contain bg-black"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls
+                    preload="metadata"
+                  />
+                ) : (
+                  <ImageZoom
+                    src={productAny.imageUrl}
+                    alt={productAny.title}
+                    className="w-full h-full object-cover"
+                  />
+                )}
 
             {/* Badges Container */}
             <div className="absolute top-4 right-4 flex flex-col gap-2">
@@ -227,9 +309,9 @@ export default async function ProductPage({ params }: PageProps) {
                 </div>
               </div>
             )}
+              </div>
+            )}
           </div>
-
-
 
           {/* Details */}
           <div className="lg:col-span-3">

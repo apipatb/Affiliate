@@ -38,7 +38,9 @@
       "Bash(git restore:*)",
       "Bash(npm run dev:*)",
       "Bash(xargs kill:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(git fetch:*)",
+      "Bash(grep:*)"
     ]
   }
 }
