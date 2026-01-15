@@ -22,7 +22,7 @@ model Product {
   description  String
   price        Float
   affiliateUrl String
-  imageUrl     String
+  imageUrl     String    // Primary/thumbnail image (backward compatible)
   mediaType    MediaType @default(IMAGE)
   category     Category  @relation(fields: [categoryId], references: [id])
   categoryId   String
@@ -37,6 +37,7 @@ model Product {
   isBestSeller Boolean   @default(false) // Best seller badge
   isLimited    Boolean   @default(false) // Limited edition badge
   launchedAt   DateTime?               // Product launch date (for "New" badge)
+  media        ProductMedia[]          // Product gallery (multiple images/videos)
   reviews      Review[]                // User reviews with photos/videos
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -100,5 +101,19 @@ model ReviewMedia {
   createdAt DateTime  @default(now())
 
   @@index([reviewId])
+  @@index([type])
+}
+
+model ProductMedia {
+  id        String    @id @default(cuid())
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  url       String    // Image or video URL
+  type      MediaType @default(IMAGE) // IMAGE or VIDEO
+  order     Int       @default(0) // Display order (0 = first)
+  createdAt DateTime  @default(now())
+
+  @@index([productId])
+  @@index([productId, order])
   @@index([type])
 }
