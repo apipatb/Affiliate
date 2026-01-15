@@ -28,6 +28,8 @@ model Product {
   categoryId   String
   clicks       Int       @default(0)
   featured     Boolean   @default(false)
+  rating       Float     @default(4.8) // Average rating from Shopee (0-5)
+  reviewCount  Int       @default(0)   // Number of reviews from Shopee
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -35,6 +37,7 @@ model Product {
   @@index([categoryId])
   @@index([createdAt])
   @@index([featured, createdAt])
+  @@index([rating])
 }
 
 enum MediaType {

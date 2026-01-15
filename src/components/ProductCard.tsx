@@ -10,6 +10,8 @@ type MediaType = 'IMAGE' | 'VIDEO'
 type Product = PrismaProduct & {
   category: PrismaCategory
   mediaType: MediaType
+  rating?: number
+  reviewCount?: number
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -97,10 +99,29 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Star Rating */}
         <div className="flex items-center gap-1 mb-4">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-          ))}
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-1">(4.8)</span>
+          {[...Array(5)].map((_, i) => {
+            const rating = product.rating || 4.8
+            return (
+              <Star
+                key={i}
+                className={`w-3.5 h-3.5 ${
+                  i < Math.floor(rating)
+                    ? 'text-yellow-400 fill-yellow-400'
+                    : i < Math.ceil(rating)
+                    ? 'text-yellow-400 fill-yellow-400 opacity-50'
+                    : 'text-slate-300 dark:text-slate-600'
+                }`}
+              />
+            )
+          })}
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-1">
+            ({(product.rating || 4.8).toFixed(1)})
+          </span>
+          {product.reviewCount && product.reviewCount > 0 && (
+            <span className="text-xs text-slate-400 dark:text-slate-500">
+              · {product.reviewCount > 1000 ? `${(product.reviewCount / 1000).toFixed(1)}K` : product.reviewCount}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-3">

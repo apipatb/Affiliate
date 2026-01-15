@@ -15,12 +15,12 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 interface PageProps {
-  searchParams: Promise<{ category?: string; search?: string; page?: string }>
+  searchParams: Promise<{ category?: string; search?: string; page?: string; sort?: string; minRating?: string }>
 }
 
 const ITEMS_PER_PAGE = 12
 
-async function getProducts(category?: string, search?: string, page: number = 1) {
+async function getProducts(category?: string, search?: string, page: number = 1, sort?: string, minRating?: string) {
   const where: Record<string, unknown> = {}
 
   if (category) {
@@ -34,13 +34,37 @@ async function getProducts(category?: string, search?: string, page: number = 1)
     ]
   }
 
+  if (minRating) {
+    where.rating = { gte: parseFloat(minRating) }
+  }
+
+  // Determine orderBy based on sort parameter
+  let orderBy: any = { createdAt: 'desc' } // default
+
+  switch (sort) {
+    case 'popular':
+      orderBy = { clicks: 'desc' }
+      break
+    case 'rating':
+      orderBy = { rating: 'desc' }
+      break
+    case 'price-low':
+      orderBy = { price: 'asc' }
+      break
+    case 'price-high':
+      orderBy = { price: 'desc' }
+      break
+    default:
+      orderBy = { createdAt: 'desc' }
+  }
+
   const skip = (page - 1) * ITEMS_PER_PAGE
 
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
       include: { category: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       skip,
       take: ITEMS_PER_PAGE,
     }),
@@ -66,7 +90,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const currentPage = Math.max(1, parseInt(params.page || '1'))
 
   const [{ products, total, totalPages }, categories] = await Promise.all([
-    getProducts(params.category, params.search, currentPage),
+    getProducts(params.category, params.search, currentPage, params.sort, params.minRating),
     getCategories(),
   ])
 

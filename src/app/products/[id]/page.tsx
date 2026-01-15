@@ -10,7 +10,12 @@ import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
 
-type ProductWithCategory = Product & { category: Category; mediaType: MediaType }
+type ProductWithCategory = Product & {
+  category: Category
+  mediaType: MediaType
+  rating?: number
+  reviewCount?: number
+}
 
 
 interface PageProps {
@@ -86,9 +91,9 @@ export default async function ProductPage({ params }: PageProps) {
         </Link>
 
         {/* Product Detail */}
-        <div className="grid lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid lg:grid-cols-5 gap-8 mb-16">
           {/* Media */}
-          <div className={`${productAny.mediaType === 'VIDEO' ? 'aspect-[9/16] max-h-[500px]' : 'aspect-square'} bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden relative mx-auto shadow-xl border-2 border-slate-200 dark:border-slate-700`}>
+          <div className={`lg:col-span-2 ${productAny.mediaType === 'VIDEO' ? 'aspect-[9/16] max-h-[450px]' : 'aspect-square max-h-[450px]'} bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden relative mx-auto w-full shadow-xl border-2 border-slate-200 dark:border-slate-700`}>
             {productAny.mediaType === 'VIDEO' ? (
               <video
                 src={productAny.imageUrl}
@@ -133,7 +138,7 @@ export default async function ProductPage({ params }: PageProps) {
 
 
           {/* Details */}
-          <div>
+          <div className="lg:col-span-3">
             <Link
               href={`/products?category=${product.category.slug}`}
               className="inline-block text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wider hover:underline mb-3 px-3 py-1 bg-primary/10 dark:bg-blue-500/10 rounded-full"
@@ -156,10 +161,29 @@ export default async function ProductPage({ params }: PageProps) {
                 </div>
               )}
               <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                ))}
-                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1">(4.8)</span>
+                {[...Array(5)].map((_, i) => {
+                  const rating = product.rating || 4.8
+                  return (
+                    <Star
+                      key={i}
+                      className={`w-4 h-4 ${
+                        i < Math.floor(rating)
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : i < Math.ceil(rating)
+                          ? 'text-yellow-400 fill-yellow-400 opacity-50'
+                          : 'text-slate-300 dark:text-slate-600'
+                      }`}
+                    />
+                  )
+                })}
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1">
+                  ({(product.rating || 4.8).toFixed(1)})
+                </span>
+                {product.reviewCount && product.reviewCount > 0 && (
+                  <span className="text-xs text-slate-500 dark:text-slate-500 ml-1">
+                    {product.reviewCount.toLocaleString('th-TH')} รีวิว
+                  </span>
+                )}
               </div>
             </div>
 
