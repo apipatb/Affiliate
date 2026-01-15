@@ -1,12 +1,63 @@
 'use client'
 
 import { useComparison } from '@/hooks/useComparison'
-import { ArrowLeft, X, Star, Zap, ArrowRight, Scale } from 'lucide-react'
+import { ArrowLeft, X, Star, Zap, ArrowRight, Scale, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import ComparisonButton from '@/components/ComparisonButton'
+
+interface Product {
+  id: string
+  title: string
+  description: string
+  price: number
+  imageUrl: string
+  clicks: number
+  rating?: number
+  reviewCount?: number
+  originalPrice?: number | null
+  category: {
+    id: string
+    name: string
+    slug: string
+  }
+}
 
 export default function ComparePage() {
-  const { comparison, removeFromComparison, clearComparison } = useComparison()
+  const { comparison, removeFromComparison, clearComparison, isFull } = useComparison()
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(false)
+
+  // Fetch suggested products
+  useEffect(() => {
+    const fetchSuggested = async () => {
+      if (comparison.length === 0) return
+
+      setLoading(true)
+      try {
+        // Get categories from comparison products
+        const categories = [...new Set(comparison.map(p => p.categoryName))]
+
+        // Fetch products from the same categories
+        const response = await fetch(`/api/products?limit=8`)
+        const data = await response.json()
+
+        if (data.products) {
+          // Filter out products already in comparison
+          const comparisonIds = new Set(comparison.map(p => p.id))
+          const filtered = data.products.filter((p: Product) => !comparisonIds.has(p.id))
+          setSuggestedProducts(filtered.slice(0, 8))
+        }
+      } catch (error) {
+        console.error('Failed to fetch suggested products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSuggested()
+  }, [comparison])
 
   if (comparison.length === 0) {
     return (
@@ -298,6 +349,96 @@ export default function ComparePage() {
             </div>
           </div>
         </div>
+
+        {/* Suggested Products to Compare */}
+        {suggestedProducts.length > 0 && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                  สินค้าแนะนำเพื่อเปรียบเทียบ
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  เลือกสินค้าเพิ่มเติมเพื่อเปรียบเทียบ {isFull ? '(ต้องลบสินค้าบางชิ้นก่อน)' : `(เหลืออีก ${4 - comparison.length} ชิ้น)`}
+                </p>
+              </div>
+              <Link
+                href="/products"
+                className="text-primary dark:text-blue-400 hover:underline font-semibold text-sm"
+              >
+                ดูสินค้าทั้งหมด →
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {suggestedProducts.map((product) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden hover:border-primary dark:hover:border-blue-500 transition-all"
+                >
+                  <Link href={`/products/${product.id}`}>
+                    <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800">
+                      <img
+                        src={product.imageUrl}
+                        alt={product.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  </Link>
+
+                  <div className="p-4">
+                    <Link href={`/products/${product.id}`}>
+                      <h3 className="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 mb-2 hover:text-primary dark:hover:text-blue-400 transition-colors">
+                        {product.title}
+                      </h3>
+                    </Link>
+
+                    <div className="flex items-center gap-1 mb-3">
+                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                        {(product.rating || 4.8).toFixed(1)}
+                      </span>
+                      {product.reviewCount && product.reviewCount > 0 && (
+                        <span className="text-xs text-slate-500 dark:text-slate-500">
+                          ({product.reviewCount})
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div>
+                        <p className="text-lg font-extrabold text-primary dark:text-blue-400">
+                          ฿{product.price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                        </p>
+                        {product.originalPrice && product.originalPrice > product.price && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 line-through">
+                            ฿{product.originalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <ComparisonButton
+                      productId={product.id}
+                      productTitle={product.title}
+                      price={product.price}
+                      imageUrl={product.imageUrl}
+                      categoryName={product.category.name}
+                      rating={product.rating}
+                      reviewCount={product.reviewCount}
+                      originalPrice={product.originalPrice}
+                      clicks={product.clicks}
+                      description={product.description}
+                      variant="large"
+                    />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
