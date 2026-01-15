@@ -146,8 +146,23 @@ export default function ProductCard({ product }: { product: Product }) {
             </div>
           )}
 
-          {/* Wishlist Button - Top Left */}
-          <div className="absolute top-3 left-3">
+          {/* Quick View Button - Appears on hover (behind wishlist) */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowQuickView(true)
+              }}
+              className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl hover:scale-105 transition-transform pointer-events-auto"
+            >
+              <Search className="w-5 h-5" />
+              Quick View
+            </button>
+          </div>
+
+          {/* Wishlist Button - Top Left (Above Quick View) */}
+          <div className="absolute top-3 left-3 z-10">
             <WishlistButton
               productId={product.id}
               productTitle={product.title}
@@ -156,21 +171,6 @@ export default function ProductCard({ product }: { product: Product }) {
               categoryName={product.category.name}
               variant="small"
             />
-          </div>
-
-          {/* Quick View Button - Appears on hover */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setShowQuickView(true)
-              }}
-              className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
-            >
-              <Search className="w-5 h-5" />
-              Quick View
-            </button>
           </div>
         </div>
       </Link>
