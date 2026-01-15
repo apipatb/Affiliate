@@ -239,7 +239,7 @@ export default async function ProductPage({ params }: PageProps) {
             </Link>
 
             <div className="flex items-start justify-between gap-4 mb-4">
-              <h1 className="text-4xl lg:text-5xl font-extrabold mt-2 text-slate-900 dark:text-white leading-tight flex-1">{product.title}</h1>
+              <h1 className="text-2xl lg:text-3xl font-extrabold mt-2 text-slate-900 dark:text-white leading-tight flex-1">{product.title}</h1>
               <div className="flex items-start gap-3">
                 <WishlistButton
                   productId={product.id}
@@ -295,7 +295,7 @@ export default async function ProductPage({ params }: PageProps) {
               </div>
             </div>
 
-            <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed mb-6 font-medium">
+            <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mb-6">
               {product.description}
             </p>
 
@@ -311,15 +311,15 @@ export default async function ProductPage({ params }: PageProps) {
               <div className="flex flex-col gap-2 mb-3">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   {hasDiscount && product.originalPrice && (
-                    <span className="text-2xl font-bold text-slate-400 dark:text-slate-500 line-through">
+                    <span className="text-xl font-bold text-slate-400 dark:text-slate-500 line-through">
                       ฿{product.originalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                     </span>
                   )}
-                  <span className="text-5xl font-extrabold text-primary dark:text-blue-400">
+                  <span className="text-3xl lg:text-4xl font-extrabold text-primary dark:text-blue-400">
                     ฿{product.price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                   </span>
                   {hasDiscount && (
-                    <span className="text-lg font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-3 py-1.5 rounded-full">
+                    <span className="text-sm font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-3 py-1.5 rounded-full">
                       ประหยัด {discountPercent}%
                     </span>
                   )}
