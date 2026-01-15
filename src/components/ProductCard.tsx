@@ -85,44 +85,42 @@ export default function ProductCard({ product }: { product: Product }) {
             />
           )}
 
-          {/* Badges */}
-          <div className="absolute top-3 right-3 flex flex-col gap-2">
-            {isHotSale && (
+          {/* Badges - Show maximum 2 badges based on priority */}
+          <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+            {/* First Priority Badge */}
+            {isHotSale ? (
               <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-pulse">
                 <Flame className="w-3 h-3 fill-white" />
                 Hot Sale!
               </div>
-            )}
-            {hasDiscount && discountPercent > 0 && !isHotSale && (
+            ) : hasDiscount && discountPercent > 0 ? (
               <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
                 -{discountPercent}%
               </div>
-            )}
-            {product.isBestSeller && !isHotSale && (
+            ) : product.isBestSeller ? (
               <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <Crown className="w-3 h-3 fill-white" />
                 ขายดี
               </div>
-            )}
-            {product.isLimited && !isHotSale && (
+            ) : product.isLimited ? (
               <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <Award className="w-3 h-3" />
                 Limited
               </div>
-            )}
-            {isNew && !isHotSale && (
+            ) : isNew ? (
               <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <Sparkles className="w-3 h-3 fill-white" />
                 ใหม่
               </div>
-            )}
-            {product.featured && !isHotSale && !product.isBestSeller && !product.isLimited && !isNew && (
+            ) : product.featured ? (
               <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <Star className="w-3 h-3 fill-white" />
                 แนะนำ
               </div>
-            )}
-            {isTrending && !isHotSale && !product.isBestSeller && (
+            ) : null}
+
+            {/* Second Priority Badge (only if not Hot Sale or Best Seller) */}
+            {!isHotSale && !product.isBestSeller && isTrending && (
               <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <TrendingUp className="w-3 h-3" />
                 มาแรง
@@ -130,21 +128,18 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
 
-          {/* Low Stock Badge - Bottom Left */}
-          {isLowStock && (
-            <div className="absolute bottom-3 left-3 bg-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-pulse">
+          {/* Bottom Left Badges - Show only one based on priority */}
+          {isLowStock ? (
+            <div className="absolute bottom-3 left-3 bg-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-pulse z-10">
               <AlertCircle className="w-3 h-3" />
               เหลือแค่ {product.stock} ชิ้น!
             </div>
-          )}
-
-          {/* Views Badge */}
-          {product.clicks > 0 && (
-            <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5">
+          ) : product.clicks > 0 ? (
+            <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 z-10">
               <Eye className="w-3 h-3" />
               {product.clicks > 1000 ? `${(product.clicks / 1000).toFixed(1)}K` : product.clicks}
             </div>
-          )}
+          ) : null}
 
           {/* Quick View Button - Appears on hover (behind wishlist) */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
