@@ -15,12 +15,28 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 interface PageProps {
-  searchParams: Promise<{ category?: string; search?: string; page?: string; sort?: string; minRating?: string }>
+  searchParams: Promise<{
+    category?: string
+    search?: string
+    page?: string
+    sort?: string
+    minRating?: string
+    minPrice?: string
+    maxPrice?: string
+  }>
 }
 
 const ITEMS_PER_PAGE = 12
 
-async function getProducts(category?: string, search?: string, page: number = 1, sort?: string, minRating?: string) {
+async function getProducts(
+  category?: string,
+  search?: string,
+  page: number = 1,
+  sort?: string,
+  minRating?: string,
+  minPrice?: string,
+  maxPrice?: string
+) {
   const where: Record<string, unknown> = {}
 
   if (category) {
@@ -36,6 +52,17 @@ async function getProducts(category?: string, search?: string, page: number = 1,
 
   if (minRating) {
     where.rating = { gte: parseFloat(minRating) }
+  }
+
+  // Price range filter
+  if (minPrice || maxPrice) {
+    where.price = {}
+    if (minPrice) {
+      where.price.gte = parseFloat(minPrice)
+    }
+    if (maxPrice) {
+      where.price.lte = parseFloat(maxPrice)
+    }
   }
 
   // Determine orderBy based on sort parameter
@@ -115,7 +142,15 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const currentPage = Math.max(1, parseInt(params.page || '1'))
 
   const [{ products, total, totalPages }, categories] = await Promise.all([
-    getProducts(params.category, params.search, currentPage, params.sort, params.minRating),
+    getProducts(
+      params.category,
+      params.search,
+      currentPage,
+      params.sort,
+      params.minRating,
+      params.minPrice,
+      params.maxPrice
+    ),
     getCategories(),
   ])
 

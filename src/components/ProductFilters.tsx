@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, X, SlidersHorizontal, Star, TrendingUp, Clock, DollarSign, Filter } from 'lucide-react'
+import PriceRangeFilter from './PriceRangeFilter'
 
 interface Category {
   id: string
@@ -155,6 +156,12 @@ export default function ProductFilters({
           ))}
         </div>
       </div>
+
+      {/* Price Range Filter */}
+      <PriceRangeFilter
+        currentMinPrice={searchParams.get('minPrice') || ''}
+        currentMaxPrice={searchParams.get('maxPrice') || ''}
+      />
 
       {/* Categories */}
       <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">

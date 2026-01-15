@@ -10,6 +10,10 @@ import ShareButtons from '@/components/ShareButtons'
 import CountdownTimer from '@/components/CountdownTimer'
 import RecentlyViewed from '@/components/RecentlyViewed'
 import TrackProductView from '@/components/TrackProductView'
+import ImageZoom from '@/components/ImageZoom'
+import WishlistButton from '@/components/WishlistButton'
+import FloatingActions from '@/components/FloatingActions'
+import NewsletterPopup from '@/components/NewsletterPopup'
 import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -145,11 +149,10 @@ export default async function ProductPage({ params }: PageProps) {
                 preload="metadata"
               />
             ) : (
-              <img
+              <ImageZoom
                 src={productAny.imageUrl}
                 alt={productAny.title}
                 className="w-full h-full object-cover"
-                loading="eager"
               />
             )}
 
@@ -235,11 +238,20 @@ export default async function ProductPage({ params }: PageProps) {
 
             <div className="flex items-start justify-between gap-4 mb-4">
               <h1 className="text-4xl lg:text-5xl font-extrabold mt-2 text-slate-900 dark:text-white leading-tight flex-1">{product.title}</h1>
-              <ShareButtons
-                url={`/products/${product.id}`}
-                title={product.title}
-                description={product.description}
-              />
+              <div className="flex items-start gap-3">
+                <WishlistButton
+                  productId={product.id}
+                  productTitle={product.title}
+                  price={product.price}
+                  imageUrl={product.imageUrl}
+                  categoryName={product.category.name}
+                />
+                <ShareButtons
+                  url={`/products/${product.id}`}
+                  title={product.title}
+                  description={product.description}
+                />
+              </div>
             </div>
 
             {/* Social Proof Bar */}
@@ -447,6 +459,12 @@ export default async function ProductPage({ params }: PageProps) {
         price={product.price}
         imageUrl={product.imageUrl}
       />
+
+      {/* Floating Actions */}
+      <FloatingActions showSearch />
+
+      {/* Newsletter Popup */}
+      <NewsletterPopup />
     </div>
   )
 }

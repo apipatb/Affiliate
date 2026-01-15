@@ -3,6 +3,7 @@
 import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame, Award, Sparkles, Crown } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import WishlistButton from './WishlistButton'
 import type { Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -140,6 +141,18 @@ export default function ProductCard({ product }: { product: Product }) {
               {product.clicks > 1000 ? `${(product.clicks / 1000).toFixed(1)}K` : product.clicks}
             </div>
           )}
+
+          {/* Wishlist Button - Top Left */}
+          <div className="absolute top-3 left-3">
+            <WishlistButton
+              productId={product.id}
+              productTitle={product.title}
+              price={product.price}
+              imageUrl={product.imageUrl}
+              categoryName={product.category.name}
+              variant="small"
+            />
+          </div>
         </div>
       </Link>
       <div className="p-6">
