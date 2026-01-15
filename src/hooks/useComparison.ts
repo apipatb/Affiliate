@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 
 const STORAGE_KEY = 'affiliate_comparison'
 const MAX_ITEMS = 4
+const STORAGE_EVENT = 'comparison-updated'
 
 export interface ComparisonItem {
   id: string
@@ -18,47 +19,84 @@ export interface ComparisonItem {
   description?: string
 }
 
+// Helper function to get comparison from localStorage
+const getStoredComparison = (): ComparisonItem[] => {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch (e) {
+    console.error('Failed to parse comparison:', e)
+    return []
+  }
+}
+
+// Helper function to save and trigger update
+const saveComparison = (items: ComparisonItem[]) => {
+  if (typeof window === 'undefined') return
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+  // Dispatch custom event to notify all components
+  window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: items }))
+}
+
 export function useComparison() {
   const [comparison, setComparison] = useState<ComparisonItem[]>([])
+  const [mounted, setMounted] = useState(false)
 
+  // Load initial data
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        setComparison(JSON.parse(stored))
-      } catch (e) {
-        console.error('Failed to parse comparison:', e)
-      }
+    setComparison(getStoredComparison())
+    setMounted(true)
+  }, [])
+
+  // Listen for changes from other components
+  useEffect(() => {
+    const handleStorageChange = (e: CustomEvent<ComparisonItem[]>) => {
+      setComparison(e.detail)
+    }
+
+    window.addEventListener(STORAGE_EVENT as any, handleStorageChange)
+
+    return () => {
+      window.removeEventListener(STORAGE_EVENT as any, handleStorageChange)
     }
   }, [])
 
   const addToComparison = (item: ComparisonItem) => {
-    if (comparison.length >= MAX_ITEMS) {
+    const current = getStoredComparison()
+
+    if (current.length >= MAX_ITEMS) {
       alert(`สามารถเปรียบเทียบได้สูงสุด ${MAX_ITEMS} สินค้าเท่านั้น`)
       return
     }
 
-    if (isInComparison(item.id)) {
+    if (current.some(i => i.id === item.id)) {
       return
     }
 
-    const newComparison = [...comparison, item]
+    const newComparison = [...current, item]
+    saveComparison(newComparison)
     setComparison(newComparison)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newComparison))
   }
 
   const removeFromComparison = (id: string) => {
-    const newComparison = comparison.filter((item) => item.id !== id)
+    const current = getStoredComparison()
+    const newComparison = current.filter((item) => item.id !== id)
+    saveComparison(newComparison)
     setComparison(newComparison)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newComparison))
   }
 
   const isInComparison = (id: string) => {
+    if (!mounted) return false
     return comparison.some((item) => item.id === id)
   }
 
   const toggleComparison = (item: ComparisonItem) => {
-    if (isInComparison(item.id)) {
+    const current = getStoredComparison()
+
+    if (current.some(i => i.id === item.id)) {
       removeFromComparison(item.id)
     } else {
       addToComparison(item)
@@ -66,8 +104,8 @@ export function useComparison() {
   }
 
   const clearComparison = () => {
+    saveComparison([])
     setComparison([])
-    localStorage.removeItem(STORAGE_KEY)
   }
 
   return {
