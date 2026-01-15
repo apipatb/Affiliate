@@ -14,6 +14,8 @@ import ImageZoom from '@/components/ImageZoom'
 import WishlistButton from '@/components/WishlistButton'
 import FloatingActions from '@/components/FloatingActions'
 import NewsletterPopup from '@/components/NewsletterPopup'
+import Breadcrumbs from '@/components/Breadcrumbs'
+import LiveChatBubble from '@/components/LiveChatBubble'
 import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -124,14 +126,14 @@ export default async function ProductPage({ params }: PageProps) {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Link */}
-        <Link
-          href="/products"
-          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400 transition-colors mb-8 font-medium"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          กลับไปหน้าสินค้า
-        </Link>
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[
+            { label: 'สินค้า', href: '/products' },
+            { label: product.category.name, href: `/products?category=${product.category.slug}` },
+            { label: product.title },
+          ]}
+        />
 
         {/* Product Detail */}
         <div className="grid lg:grid-cols-5 gap-8 mb-16">
@@ -462,6 +464,9 @@ export default async function ProductPage({ params }: PageProps) {
 
       {/* Floating Actions */}
       <FloatingActions showSearch />
+
+      {/* Live Chat Bubble */}
+      <LiveChatBubble />
 
       {/* Newsletter Popup */}
       <NewsletterPopup />

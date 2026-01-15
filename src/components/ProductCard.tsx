@@ -1,9 +1,11 @@
 'use client'
 
-import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame, Award, Sparkles, Crown } from 'lucide-react'
+import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame, Award, Sparkles, Crown, Search } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import WishlistButton from './WishlistButton'
+import QuickViewModal from './QuickViewModal'
 import type { Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -23,6 +25,8 @@ type Product = PrismaProduct & {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
+  const [showQuickView, setShowQuickView] = useState(false)
+
   // Use redirect route that tracks clicks and redirects to affiliate URL
   const buyUrl = `/products/${product.id}/go`
 
@@ -153,8 +157,30 @@ export default function ProductCard({ product }: { product: Product }) {
               variant="small"
             />
           </div>
+
+          {/* Quick View Button - Appears on hover */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowQuickView(true)
+              }}
+              className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
+            >
+              <Search className="w-5 h-5" />
+              Quick View
+            </button>
+          </div>
         </div>
       </Link>
+
+      {/* Quick View Modal */}
+      <QuickViewModal
+        product={product as any}
+        isOpen={showQuickView}
+        onClose={() => setShowQuickView(false)}
+      />
       <div className="p-6">
         <Link
           href={`/products?category=${product.category.slug}`}
