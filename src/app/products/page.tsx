@@ -60,10 +60,10 @@ async function getProducts(
   if (minPrice || maxPrice) {
     where.price = {}
     if (minPrice) {
-      where.price.gte = parseFloat(minPrice)
+      ;(where.price as any).gte = parseFloat(minPrice)
     }
     if (maxPrice) {
-      where.price.lte = parseFloat(maxPrice)
+      ;(where.price as any).lte = parseFloat(maxPrice)
     }
   }
 
