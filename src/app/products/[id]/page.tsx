@@ -2,10 +2,14 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, TrendingUp, Eye, Users, Heart, Flame, AlertCircle, Package } from 'lucide-react'
+import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, TrendingUp, Eye, Users, Heart, Flame, AlertCircle, Package, Crown, Award, Sparkles } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
 import BuyButton from '@/components/BuyButton'
 import StickyBuyButton from '@/components/StickyBuyButton'
+import ShareButtons from '@/components/ShareButtons'
+import CountdownTimer from '@/components/CountdownTimer'
+import RecentlyViewed from '@/components/RecentlyViewed'
+import TrackProductView from '@/components/TrackProductView'
 import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -18,6 +22,10 @@ type ProductWithCategory = Product & {
   originalPrice?: number | null
   soldCount?: number
   stock?: number | null
+  saleEndDate?: Date | null
+  isBestSeller?: boolean
+  isLimited?: boolean
+  launchedAt?: Date | null
 }
 
 
@@ -94,8 +102,23 @@ export default async function ProductPage({ params }: PageProps) {
   // Hot sale indicator
   const isHotSale = hasDiscount && discountPercent >= 30
 
+  // New arrival (launched within last 7 days)
+  const isNew = product.launchedAt && (new Date().getTime() - new Date(product.launchedAt).getTime()) / (1000 * 60 * 60 * 24) <= 7
+
+  // Check if sale is active and has end date
+  const hasSaleTimer = product.saleEndDate && new Date(product.saleEndDate) > new Date()
+
   return (
     <div className="py-12 bg-white dark:bg-slate-900">
+      {/* Track product view for recently viewed feature */}
+      <TrackProductView
+        productId={product.id}
+        productTitle={product.title}
+        price={product.price}
+        imageUrl={product.imageUrl}
+        categoryName={product.category.name}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Link */}
         <Link
@@ -143,19 +166,37 @@ export default async function ProductPage({ params }: PageProps) {
                   -{discountPercent}%
                 </div>
               )}
-              {productAny.featured && !isHotSale && (
+              {productAny.isBestSeller && !isHotSale && (
+                <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                  <Crown className="w-4 h-4 fill-white" />
+                  ขายดีที่สุด
+                </div>
+              )}
+              {productAny.isLimited && !isHotSale && (
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                  <Award className="w-4 h-4" />
+                  Limited Edition
+                </div>
+              )}
+              {isNew && !isHotSale && (
+                <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                  <Sparkles className="w-4 h-4 fill-white" />
+                  สินค้าใหม่
+                </div>
+              )}
+              {productAny.featured && !isHotSale && !productAny.isBestSeller && !productAny.isLimited && !isNew && (
                 <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse">
                   <Star className="w-4 h-4 fill-white" />
                   แนะนำ
                 </div>
               )}
-              {isPopular && !isHotSale && (
+              {isPopular && !isHotSale && !productAny.isBestSeller && (
                 <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
                   <Heart className="w-4 h-4 fill-white" />
                   ยอดนิยม
                 </div>
               )}
-              {isTrending && !isHotSale && (
+              {isTrending && !isHotSale && !productAny.isBestSeller && (
                 <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
                   <TrendingUp className="w-4 h-4" />
                   กำลังมาแรง
@@ -192,7 +233,14 @@ export default async function ProductPage({ params }: PageProps) {
               {product.category.name}
             </Link>
 
-            <h1 className="text-4xl lg:text-5xl font-extrabold mt-2 mb-4 text-slate-900 dark:text-white leading-tight">{product.title}</h1>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <h1 className="text-4xl lg:text-5xl font-extrabold mt-2 text-slate-900 dark:text-white leading-tight flex-1">{product.title}</h1>
+              <ShareButtons
+                url={`/products/${product.id}`}
+                title={product.title}
+                description={product.description}
+              />
+            </div>
 
             {/* Social Proof Bar */}
             <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
@@ -236,6 +284,13 @@ export default async function ProductPage({ params }: PageProps) {
             <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed mb-6 font-medium">
               {product.description}
             </p>
+
+            {/* Countdown Timer */}
+            {hasSaleTimer && product.saleEndDate && (
+              <div className="mb-6">
+                <CountdownTimer endDate={new Date(product.saleEndDate)} />
+              </div>
+            )}
 
             {/* Price Section */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 mb-6 border-2 border-blue-200 dark:border-blue-800">
@@ -371,7 +426,7 @@ export default async function ProductPage({ params }: PageProps) {
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div>
+          <div className="mb-16">
             <h2 className="text-3xl font-extrabold mb-8 text-slate-900 dark:text-white">สินค้าที่คุณอาจชอบ</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedProducts.map((product) => (
@@ -381,6 +436,9 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      {/* Recently Viewed Products */}
+      <RecentlyViewed />
 
       {/* Sticky Buy Button */}
       <StickyBuyButton

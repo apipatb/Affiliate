@@ -77,6 +77,10 @@ async function getProducts(category?: string, search?: string, page: number = 1,
         originalPrice: true,
         soldCount: true,
         stock: true,
+        saleEndDate: true,
+        isBestSeller: true,
+        isLimited: true,
+        launchedAt: true,
         category: {
           select: {
             id: true,

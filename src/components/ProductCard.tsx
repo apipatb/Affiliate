@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame } from 'lucide-react'
+import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame, Award, Sparkles, Crown } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import type { Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
@@ -12,6 +12,13 @@ type Product = PrismaProduct & {
   mediaType: MediaType
   rating?: number
   reviewCount?: number
+  originalPrice?: number | null
+  soldCount?: number
+  stock?: number | null
+  saleEndDate?: Date | null
+  isBestSeller?: boolean
+  isLimited?: boolean
+  launchedAt?: Date | null
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -33,6 +40,9 @@ export default function ProductCard({ product }: { product: Product }) {
 
   // Hot sale indicator
   const isHotSale = hasDiscount && discountPercent >= 30
+
+  // New arrival (launched within last 7 days)
+  const isNew = product.launchedAt && (new Date().getTime() - new Date(product.launchedAt).getTime()) / (1000 * 60 * 60 * 24) <= 7
 
   return (
     <motion.div
@@ -78,18 +88,36 @@ export default function ProductCard({ product }: { product: Product }) {
                 Hot Sale!
               </div>
             )}
-            {hasDiscount && discountPercent > 0 && (
+            {hasDiscount && discountPercent > 0 && !isHotSale && (
               <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
                 -{discountPercent}%
               </div>
             )}
-            {product.featured && !isHotSale && (
+            {product.isBestSeller && !isHotSale && (
+              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+                <Crown className="w-3 h-3 fill-white" />
+                ขายดี
+              </div>
+            )}
+            {product.isLimited && !isHotSale && (
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+                <Award className="w-3 h-3" />
+                Limited
+              </div>
+            )}
+            {isNew && !isHotSale && (
+              <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+                <Sparkles className="w-3 h-3 fill-white" />
+                ใหม่
+              </div>
+            )}
+            {product.featured && !isHotSale && !product.isBestSeller && !product.isLimited && !isNew && (
               <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <Star className="w-3 h-3 fill-white" />
                 แนะนำ
               </div>
             )}
-            {isTrending && !isHotSale && (
+            {isTrending && !isHotSale && !product.isBestSeller && (
               <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <TrendingUp className="w-3 h-3" />
                 มาแรง

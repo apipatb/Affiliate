@@ -33,6 +33,10 @@ model Product {
   originalPrice Float?                 // Original price for comparison
   soldCount    Int       @default(0)   // Number of items sold
   stock        Int?                    // Stock quantity (null = unlimited)
+  saleEndDate  DateTime?               // Sale end date for countdown timer
+  isBestSeller Boolean   @default(false) // Best seller badge
+  isLimited    Boolean   @default(false) // Limited edition badge
+  launchedAt   DateTime?               // Product launch date (for "New" badge)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
