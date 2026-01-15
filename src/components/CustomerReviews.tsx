@@ -1,8 +1,15 @@
 'use client'
 
-import { Star, ThumbsUp, User, VerifiedIcon } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Star, ThumbsUp, User, VerifiedIcon, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
+
+interface ReviewMedia {
+  id: string
+  url: string
+  type: 'IMAGE' | 'VIDEO'
+  order: number
+}
 
 interface Review {
   id: string
@@ -12,7 +19,7 @@ interface Review {
   date: string
   verified: boolean
   helpful: number
-  images?: string[]
+  media?: ReviewMedia[]
 }
 
 interface CustomerReviewsProps {
@@ -31,6 +38,11 @@ const mockReviews: Review[] = [
     date: '2026-01-10',
     verified: true,
     helpful: 24,
+    media: [
+      { id: '1', url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', type: 'IMAGE', order: 0 },
+      { id: '2', url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', type: 'IMAGE', order: 1 },
+      { id: '3', url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400', type: 'IMAGE', order: 2 },
+    ],
   },
   {
     id: '2',
@@ -40,6 +52,9 @@ const mockReviews: Review[] = [
     date: '2026-01-08',
     verified: true,
     helpful: 12,
+    media: [
+      { id: '4', url: 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400', type: 'IMAGE', order: 0 },
+    ],
   },
   {
     id: '3',
@@ -58,6 +73,10 @@ const mockReviews: Review[] = [
     date: '2026-01-03',
     verified: true,
     helpful: 15,
+    media: [
+      { id: '5', url: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=400', type: 'IMAGE', order: 0 },
+      { id: '6', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', type: 'IMAGE', order: 1 },
+    ],
   },
   {
     id: '5',
@@ -77,6 +96,7 @@ export default function CustomerReviews({
 }: CustomerReviewsProps) {
   const [selectedFilter, setSelectedFilter] = useState<'all' | number>('all')
   const [helpfulClicked, setHelpfulClicked] = useState<Set<string>>(new Set())
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   const filteredReviews =
     selectedFilter === 'all'
@@ -263,6 +283,43 @@ export default function CustomerReviews({
                 {review.comment}
               </p>
 
+              {/* Review Media (Photos/Videos) */}
+              {review.media && review.media.length > 0 && (
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                  {review.media.map((media) => (
+                    <button
+                      key={media.id}
+                      onClick={() => media.type === 'IMAGE' && setSelectedImage(media.url)}
+                      className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 border-slate-200 dark:border-slate-700 hover:border-primary dark:hover:border-blue-400 transition-colors"
+                    >
+                      {media.type === 'IMAGE' ? (
+                        <img
+                          src={media.url}
+                          alt={`รีวิวจาก ${review.userName}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="relative w-full h-full">
+                          <video
+                            src={media.url}
+                            className="w-full h-full object-cover"
+                            muted
+                            playsInline
+                          />
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center">
+                              <svg className="w-4 h-4 text-black ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Review Footer */}
               <div className="flex items-center gap-4">
                 <button
@@ -292,6 +349,33 @@ export default function CustomerReviews({
           <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white font-bold px-8 py-3 rounded-xl transition-colors">
             โหลดรีวิวเพิ่มเติม
           </button>
+        </div>
+      )}
+
+      {/* Image Lightbox Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="relative max-w-4xl max-h-[90vh]"
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+            <img
+              src={selectedImage}
+              alt="รีวิวสินค้า"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            />
+          </motion.div>
         </div>
       )}
     </div>

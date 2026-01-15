@@ -37,6 +37,7 @@ model Product {
   isBestSeller Boolean   @default(false) // Best seller badge
   isLimited    Boolean   @default(false) // Limited edition badge
   launchedAt   DateTime?               // Product launch date (for "New" badge)
+  reviews      Review[]                // User reviews with photos/videos
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -67,4 +68,37 @@ model Category {
 enum Role {
   USER
   ADMIN
+}
+
+model Review {
+  id          String        @id @default(cuid())
+  product     Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  userName    String        // Display name of reviewer
+  userEmail   String?       // Optional email for verification
+  rating      Int           // 1-5 stars
+  comment     String        @db.Text // Review text
+  verified    Boolean       @default(false) // Verified purchase badge
+  helpful     Int           @default(0) // Helpful vote count
+  media       ReviewMedia[] // Photos and videos
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([productId])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([verified])
+}
+
+model ReviewMedia {
+  id        String    @id @default(cuid())
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reviewId  String
+  url       String    // Image or video URL
+  type      MediaType // IMAGE or VIDEO
+  order     Int       @default(0) // Display order
+  createdAt DateTime  @default(now())
+
+  @@index([reviewId])
+  @@index([type])
 }
