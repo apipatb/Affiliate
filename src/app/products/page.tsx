@@ -3,6 +3,8 @@ import ProductCard from '@/components/ProductCard'
 import ProductFilters from '@/components/ProductFilters'
 import Pagination from '@/components/Pagination'
 import BackToTop from '@/components/BackToTop'
+import ComparisonFloatingButton from '@/components/ComparisonFloatingButton'
+import InfiniteScrollProducts from '@/components/InfiniteScrollProducts'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -199,19 +201,20 @@ export default async function ProductsPage({ searchParams }: PageProps) {
             ) : (
               <>
                 <p className="text-sm text-slate-700 dark:text-slate-300 mb-6">
-                  แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, total)} จาก {total} สินค้า
+                  พบ {total} สินค้า
                   {params.category && ` ในหมวด ${params.category}`}
                   {params.search && ` ที่ตรงกับ "${params.search}"`}
                 </p>
-                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product as any} />
-                  ))}
-                </div>
-                <Pagination
-                  currentPage={currentPage}
+                <InfiniteScrollProducts
+                  initialProducts={products as any}
+                  initialPage={currentPage}
                   totalPages={totalPages}
-                  baseUrl="/products"
+                  category={params.category}
+                  search={params.search}
+                  sort={params.sort}
+                  minRating={params.minRating}
+                  minPrice={params.minPrice}
+                  maxPrice={params.maxPrice}
                 />
               </>
             )}
@@ -219,6 +222,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         </div>
       </div>
       <BackToTop />
+      <ComparisonFloatingButton />
     </div>
   )
 }

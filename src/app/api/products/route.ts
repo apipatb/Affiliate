@@ -11,6 +11,10 @@ export async function GET(request: NextRequest) {
   const categoryId = searchParams.get('categoryId') // For admin pages (by ID)
   const search = searchParams.get('search')
   const featured = searchParams.get('featured')
+  const sort = searchParams.get('sort')
+  const minRating = searchParams.get('minRating')
+  const minPrice = searchParams.get('minPrice')
+  const maxPrice = searchParams.get('maxPrice')
 
   // Pagination parameters
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -41,19 +45,56 @@ export async function GET(request: NextRequest) {
     where.featured = false
   }
 
+  // Rating filter
+  if (minRating) {
+    where.rating = { gte: parseFloat(minRating) }
+  }
+
+  // Price range filter
+  if (minPrice || maxPrice) {
+    where.price = {}
+    if (minPrice) {
+      ;(where.price as any).gte = parseFloat(minPrice)
+    }
+    if (maxPrice) {
+      ;(where.price as any).lte = parseFloat(maxPrice)
+    }
+  }
+
+  // Determine orderBy based on sort parameter
+  let orderBy: any = { createdAt: 'desc' } // default
+
+  switch (sort) {
+    case 'popular':
+      orderBy = { clicks: 'desc' }
+      break
+    case 'rating':
+      orderBy = { rating: 'desc' }
+      break
+    case 'price-low':
+      orderBy = { price: 'asc' }
+      break
+    case 'price-high':
+      orderBy = { price: 'desc' }
+      break
+    default:
+      orderBy = { createdAt: 'desc' }
+  }
+
   // Get total count for pagination metadata
   const total = await prisma.product.count({ where })
 
   const products = await prisma.product.findMany({
     where,
     include: { category: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy,
     skip,
     take: limit,
   })
 
   return NextResponse.json({
     data: products,
+    products, // Also return products for infinite scroll compatibility
     pagination: {
       page,
       limit,
@@ -62,6 +103,8 @@ export async function GET(request: NextRequest) {
       hasNext: page < Math.ceil(total / limit),
       hasPrev: page > 1,
     },
+    totalPages: Math.ceil(total / limit), // For infinite scroll compatibility
+    currentPage: page, // For infinite scroll compatibility
   })
 }
 

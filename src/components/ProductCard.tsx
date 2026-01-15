@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import WishlistButton from './WishlistButton'
+import ComparisonButton from './ComparisonButton'
 import QuickViewModal from './QuickViewModal'
+import VideoPlayerModal from './VideoPlayerModal'
 import type { Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -26,6 +28,7 @@ type Product = PrismaProduct & {
 
 export default function ProductCard({ product }: { product: Product }) {
   const [showQuickView, setShowQuickView] = useState(false)
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false)
 
   // Use redirect route that tracks clicks and redirects to affiliate URL
   const buyUrl = `/products/${product.id}/go`
@@ -69,11 +72,18 @@ export default function ProductCard({ product }: { product: Product }) {
               />
               {/* Play icon overlay */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowVideoPlayer(true)
+                  }}
+                  className="w-14 h-14 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
+                >
                   <svg className="w-6 h-6 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
-                </div>
+                </button>
               </div>
             </div>
           ) : (
@@ -156,14 +166,27 @@ export default function ProductCard({ product }: { product: Product }) {
             </button>
           </div>
 
-          {/* Wishlist Button - Top Left (Above Quick View) */}
-          <div className="absolute top-3 left-3 z-10">
+          {/* Action Buttons - Top Left (Above Quick View) */}
+          <div className="absolute top-3 left-3 z-10 flex gap-2">
             <WishlistButton
               productId={product.id}
               productTitle={product.title}
               price={product.price}
               imageUrl={product.imageUrl}
               categoryName={product.category.name}
+              variant="small"
+            />
+            <ComparisonButton
+              productId={product.id}
+              productTitle={product.title}
+              price={product.price}
+              imageUrl={product.imageUrl}
+              categoryName={product.category.name}
+              rating={product.rating}
+              reviewCount={product.reviewCount}
+              originalPrice={product.originalPrice}
+              clicks={product.clicks}
+              description={product.description}
               variant="small"
             />
           </div>
@@ -176,6 +199,17 @@ export default function ProductCard({ product }: { product: Product }) {
         isOpen={showQuickView}
         onClose={() => setShowQuickView(false)}
       />
+
+      {/* Video Player Modal */}
+      {product.mediaType === 'VIDEO' && (
+        <VideoPlayerModal
+          isOpen={showVideoPlayer}
+          onClose={() => setShowVideoPlayer(false)}
+          videoUrl={product.imageUrl}
+          title={product.title}
+        />
+      )}
+
       <div className="p-6">
         <Link
           href={`/products?category=${product.category.slug}`}

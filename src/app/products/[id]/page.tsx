@@ -12,9 +12,12 @@ import RecentlyViewed from '@/components/RecentlyViewed'
 import TrackProductView from '@/components/TrackProductView'
 import ImageZoom from '@/components/ImageZoom'
 import WishlistButton from '@/components/WishlistButton'
+import ComparisonButton from '@/components/ComparisonButton'
+import ComparisonFloatingButton from '@/components/ComparisonFloatingButton'
 import FloatingActions from '@/components/FloatingActions'
 import NewsletterPopup from '@/components/NewsletterPopup'
 import Breadcrumbs from '@/components/Breadcrumbs'
+import CustomerReviews from '@/components/CustomerReviews'
 import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -247,6 +250,19 @@ export default async function ProductPage({ params }: PageProps) {
                   imageUrl={product.imageUrl}
                   categoryName={product.category.name}
                 />
+                <ComparisonButton
+                  productId={product.id}
+                  productTitle={product.title}
+                  price={product.price}
+                  imageUrl={product.imageUrl}
+                  categoryName={product.category.name}
+                  rating={product.rating}
+                  reviewCount={product.reviewCount}
+                  originalPrice={product.originalPrice}
+                  clicks={product.clicks}
+                  description={product.description}
+                  variant="small"
+                />
                 <ShareButtons
                   url={`/products/${product.id}`}
                   title={product.title}
@@ -412,6 +428,15 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Customer Reviews */}
+        <div className="mb-16">
+          <CustomerReviews
+            productId={product.id}
+            productRating={product.rating || 4.8}
+            reviewCount={product.reviewCount || 127}
+          />
+        </div>
+
         {/* Structured Data (JSON-LD) */}
         <script
           type="application/ld+json"
@@ -463,6 +488,9 @@ export default async function ProductPage({ params }: PageProps) {
 
       {/* Floating Actions */}
       <FloatingActions showSearch />
+
+      {/* Comparison Floating Button */}
+      <ComparisonFloatingButton />
 
       {/* Newsletter Popup */}
       <NewsletterPopup />
