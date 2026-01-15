@@ -28,7 +28,7 @@ export default function LiveChatBubble() {
         animate={{ scale: 1 }}
         transition={{ delay: 1, type: 'spring', stiffness: 260, damping: 20 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-24 right-6 z-50 w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-full shadow-2xl flex items-center justify-center transition-all transform hover:scale-110 group"
+        className="fixed bottom-6 left-6 z-50 w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-full shadow-2xl flex items-center justify-center transition-all transform hover:scale-110 group"
       >
         {isOpen ? (
           <X className="w-7 h-7 text-white" />
@@ -62,7 +62,7 @@ export default function LiveChatBubble() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed bottom-44 right-6 z-50 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700"
+            className="fixed bottom-24 left-6 z-50 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-4">
