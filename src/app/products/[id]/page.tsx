@@ -15,7 +15,6 @@ import WishlistButton from '@/components/WishlistButton'
 import FloatingActions from '@/components/FloatingActions'
 import NewsletterPopup from '@/components/NewsletterPopup'
 import Breadcrumbs from '@/components/Breadcrumbs'
-import LiveChatBubble from '@/components/LiveChatBubble'
 import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -464,9 +463,6 @@ export default async function ProductPage({ params }: PageProps) {
 
       {/* Floating Actions */}
       <FloatingActions showSearch />
-
-      {/* Live Chat Bubble */}
-      <LiveChatBubble />
 
       {/* Newsletter Popup */}
       <NewsletterPopup />

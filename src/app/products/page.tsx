@@ -3,7 +3,6 @@ import ProductCard from '@/components/ProductCard'
 import ProductFilters from '@/components/ProductFilters'
 import Pagination from '@/components/Pagination'
 import BackToTop from '@/components/BackToTop'
-import LiveChatBubble from '@/components/LiveChatBubble'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -220,7 +219,6 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         </div>
       </div>
       <BackToTop />
-      <LiveChatBubble />
     </div>
   )
 }
