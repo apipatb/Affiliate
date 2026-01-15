@@ -2,9 +2,10 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, TrendingUp, Eye, Users, Heart } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
 import BuyButton from '@/components/BuyButton'
+import StickyBuyButton from '@/components/StickyBuyButton'
 import type { Product, Category } from '@prisma/client'
 
 type MediaType = 'IMAGE' | 'VIDEO'
@@ -68,13 +69,17 @@ export default async function ProductPage({ params }: PageProps) {
   const productAny = product
 
 
+  const isPopular = product.clicks > 50
+  const isTrending = product.clicks > 20
+  const viewersToday = Math.floor(product.clicks * 0.3) + Math.floor(Math.random() * 10) // Simulate today's viewers
+
   return (
     <div className="py-12 bg-white dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Link */}
         <Link
           href="/products"
-          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400 transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400 transition-colors mb-8 font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           กลับไปหน้าสินค้า
@@ -83,7 +88,7 @@ export default async function ProductPage({ params }: PageProps) {
         {/* Product Detail */}
         <div className="grid lg:grid-cols-2 gap-12 mb-16">
           {/* Media */}
-          <div className={`${productAny.mediaType === 'VIDEO' ? 'aspect-[9/16] max-h-[500px]' : 'aspect-square'} bg-slate-100 rounded-2xl overflow-hidden relative mx-auto`}>
+          <div className={`${productAny.mediaType === 'VIDEO' ? 'aspect-[9/16] max-h-[500px]' : 'aspect-square'} bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden relative mx-auto shadow-xl border-2 border-slate-200 dark:border-slate-700`}>
             {productAny.mediaType === 'VIDEO' ? (
               <video
                 src={productAny.imageUrl}
@@ -101,12 +106,28 @@ export default async function ProductPage({ params }: PageProps) {
                 className="w-full h-full object-cover"
               />
             )}
-            {productAny.featured && (
-              <div className="absolute top-4 right-4 bg-accent text-white px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-1">
-                <Star className="w-4 h-4 fill-white" />
-                แนะนำ
-              </div>
-            )}
+
+            {/* Badges Container */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2">
+              {productAny.featured && (
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse">
+                  <Star className="w-4 h-4 fill-white" />
+                  แนะนำ
+                </div>
+              )}
+              {isPopular && (
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                  <Heart className="w-4 h-4 fill-white" />
+                  ยอดนิยม
+                </div>
+              )}
+              {isTrending && (
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                  <TrendingUp className="w-4 h-4" />
+                  กำลังมาแรง
+                </div>
+              )}
+            </div>
           </div>
 
 
@@ -115,37 +136,80 @@ export default async function ProductPage({ params }: PageProps) {
           <div>
             <Link
               href={`/products?category=${product.category.slug}`}
-              className="text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wider hover:underline"
+              className="inline-block text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wider hover:underline mb-3 px-3 py-1 bg-primary/10 dark:bg-blue-500/10 rounded-full"
             >
               {product.category.name}
             </Link>
 
-            <h1 className="text-4xl font-bold mt-2 mb-4 text-black dark:text-slate-100">{product.title}</h1>
+            <h1 className="text-4xl lg:text-5xl font-extrabold mt-2 mb-4 text-slate-900 dark:text-white leading-tight">{product.title}</h1>
 
-            <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+            {/* Social Proof Bar */}
+            <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Eye className="w-5 h-5 text-blue-500" />
+                <span className="text-sm font-semibold">{product.clicks.toLocaleString('th-TH')} ครั้ง</span>
+              </div>
+              {viewersToday > 0 && (
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <Users className="w-5 h-5 text-green-500" />
+                  <span className="text-sm font-semibold">{viewersToday} คนกำลังดู</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                ))}
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 ml-1">(4.8)</span>
+              </div>
+            </div>
+
+            <p className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed mb-6 font-medium">
               {product.description}
             </p>
 
-            <div className="text-4xl font-bold text-primary dark:text-blue-400 mb-8">
-              ฿{product.price.toFixed(2)}
+            {/* Price Section */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 mb-6 border-2 border-blue-200 dark:border-blue-800">
+              <div className="flex items-baseline gap-3 mb-2">
+                <span className="text-5xl font-extrabold text-primary dark:text-blue-400">
+                  ฿{product.price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                </span>
+                {isPopular && (
+                  <span className="text-sm font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
+                    ราคาพิเศษ!
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400 font-medium flex items-center gap-2">
+                <Truck className="w-4 h-4" />
+                ส่งฟรี เมื่อซื้อผ่าน Shopee
+              </p>
             </div>
 
             {/* CTA Button */}
             <BuyButton productId={product.id} affiliateUrl={product.affiliateUrl} />
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
-              <div className="text-center">
-                <ShieldCheck className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                <p className="text-xs font-medium text-black dark:text-slate-300">คุณภาพรับรอง</p>
+            <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t-2 border-slate-200 dark:border-slate-700">
+              <div className="text-center group">
+                <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <ShieldCheck className="w-7 h-7 text-green-600 dark:text-green-400" />
+                </div>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">คุณภาพรับรอง</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">100% แท้</p>
               </div>
-              <div className="text-center">
-                <Truck className="w-6 h-6 text-primary dark:text-blue-400 mx-auto mb-2" />
-                <p className="text-xs font-medium text-black dark:text-slate-300">จัดส่งรวดเร็ว</p>
+              <div className="text-center group">
+                <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Truck className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">จัดส่งรวดเร็ว</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ส่งฟรี</p>
               </div>
-              <div className="text-center">
-                <RefreshCw className="w-6 h-6 text-accent dark:text-yellow-400 mx-auto mb-2" />
-                <p className="text-xs font-medium text-black dark:text-slate-300">คืนสินค้าง่าย</p>
+              <div className="text-center group">
+                <div className="w-14 h-14 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <RefreshCw className="w-7 h-7 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">คืนสินค้าง่าย</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">7 วัน</p>
               </div>
             </div>
           </div>
@@ -210,7 +274,7 @@ export default async function ProductPage({ params }: PageProps) {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold mb-8 text-black dark:text-slate-100">สินค้าที่คุณอาจชอบ</h2>
+            <h2 className="text-3xl font-extrabold mb-8 text-slate-900 dark:text-white">สินค้าที่คุณอาจชอบ</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
@@ -219,6 +283,14 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      {/* Sticky Buy Button */}
+      <StickyBuyButton
+        productId={product.id}
+        productTitle={product.title}
+        price={product.price}
+        imageUrl={product.imageUrl}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { ExternalLink } from 'lucide-react'
+import { ShoppingCart, Zap, ArrowRight } from 'lucide-react'
 
 interface BuyButtonProps {
   productId: string
@@ -17,12 +17,28 @@ export default function BuyButton({ productId }: BuyButtonProps) {
   }
 
   return (
-    <button
-      onClick={handleClick}
-      className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2"
-    >
-      <ExternalLink className="w-5 h-5" />
-      ซื้อเลย
-    </button>
+    <div className="space-y-3">
+      {/* Main CTA Button */}
+      <button
+        onClick={handleClick}
+        className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white font-extrabold text-xl py-5 rounded-2xl flex items-center justify-center gap-3 shadow-2xl shadow-orange-500/50 hover:shadow-3xl hover:shadow-orange-600/60 transition-all transform hover:scale-[1.02] active:scale-[0.98] group relative overflow-hidden"
+      >
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+
+        <Zap className="w-6 h-6 fill-white animate-pulse relative z-10" />
+        <span className="relative z-10">ซื้อเลยตอนนี้</span>
+        <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform relative z-10" />
+      </button>
+
+      {/* Secondary CTA */}
+      <button
+        onClick={handleClick}
+        className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold text-base py-3 rounded-xl flex items-center justify-center gap-2 border-2 border-slate-300 dark:border-slate-600 hover:border-primary dark:hover:border-blue-500 transition-all"
+      >
+        <ShoppingCart className="w-5 h-5" />
+        <span>เพิ่มลงรถเข็น</span>
+      </button>
+    </div>
   )
 }
