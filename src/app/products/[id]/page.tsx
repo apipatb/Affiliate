@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, TrendingUp, Eye, Users, Heart } from 'lucide-react'
+import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, TrendingUp, Eye, Users, Heart, Flame, AlertCircle, Package } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
 import BuyButton from '@/components/BuyButton'
 import StickyBuyButton from '@/components/StickyBuyButton'
@@ -15,6 +15,9 @@ type ProductWithCategory = Product & {
   mediaType: MediaType
   rating?: number
   reviewCount?: number
+  originalPrice?: number | null
+  soldCount?: number
+  stock?: number | null
 }
 
 
@@ -78,6 +81,19 @@ export default async function ProductPage({ params }: PageProps) {
   const isTrending = product.clicks > 20
   const viewersToday = Math.floor(product.clicks * 0.3) + Math.floor(Math.random() * 10) // Simulate today's viewers
 
+  // Calculate discount percentage
+  const hasDiscount = product.originalPrice && product.originalPrice > product.price
+  const discountPercent = hasDiscount
+    ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+    : 0
+
+  // Low stock warning
+  const isLowStock = product.stock !== null && product.stock !== undefined && product.stock > 0 && product.stock <= 10
+  const isOutOfStock = product.stock !== null && product.stock !== undefined && product.stock === 0
+
+  // Hot sale indicator
+  const isHotSale = hasDiscount && discountPercent >= 30
+
   return (
     <div className="py-12 bg-white dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -116,25 +132,53 @@ export default async function ProductPage({ params }: PageProps) {
 
             {/* Badges Container */}
             <div className="absolute top-4 right-4 flex flex-col gap-2">
-              {productAny.featured && (
+              {isHotSale && (
+                <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse">
+                  <Flame className="w-4 h-4 fill-white" />
+                  Hot Sale!
+                </div>
+              )}
+              {hasDiscount && discountPercent > 0 && !isHotSale && (
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                  -{discountPercent}%
+                </div>
+              )}
+              {productAny.featured && !isHotSale && (
                 <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse">
                   <Star className="w-4 h-4 fill-white" />
                   แนะนำ
                 </div>
               )}
-              {isPopular && (
+              {isPopular && !isHotSale && (
                 <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
                   <Heart className="w-4 h-4 fill-white" />
                   ยอดนิยม
                 </div>
               )}
-              {isTrending && (
+              {isTrending && !isHotSale && (
                 <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg">
                   <TrendingUp className="w-4 h-4" />
                   กำลังมาแรง
                 </div>
               )}
             </div>
+
+            {/* Low Stock Badge - Bottom Left */}
+            {isLowStock && (
+              <div className="absolute bottom-4 left-4 bg-red-600 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg animate-pulse">
+                <AlertCircle className="w-4 h-4" />
+                เหลือแค่ {product.stock} ชิ้น!
+              </div>
+            )}
+
+            {/* Out of Stock Overlay */}
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                <div className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-bold shadow-2xl">
+                  สินค้าหมด
+                </div>
+              </div>
+            )}
           </div>
 
 
@@ -195,15 +239,37 @@ export default async function ProductPage({ params }: PageProps) {
 
             {/* Price Section */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 mb-6 border-2 border-blue-200 dark:border-blue-800">
-              <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-5xl font-extrabold text-primary dark:text-blue-400">
-                  ฿{product.price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
-                </span>
-                {isPopular && (
-                  <span className="text-sm font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
-                    ราคาพิเศษ!
+              <div className="flex flex-col gap-2 mb-3">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  {hasDiscount && product.originalPrice && (
+                    <span className="text-2xl font-bold text-slate-400 dark:text-slate-500 line-through">
+                      ฿{product.originalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                    </span>
+                  )}
+                  <span className="text-5xl font-extrabold text-primary dark:text-blue-400">
+                    ฿{product.price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                   </span>
-                )}
+                  {hasDiscount && (
+                    <span className="text-lg font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-3 py-1.5 rounded-full">
+                      ประหยัด {discountPercent}%
+                    </span>
+                  )}
+                </div>
+                {/* Social Proof */}
+                <div className="flex items-center gap-4 text-sm">
+                  {product.soldCount !== undefined && product.soldCount > 0 && (
+                    <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-semibold">
+                      <Package className="w-4 h-4" />
+                      ขายแล้ว {product.soldCount.toLocaleString('th-TH')} ชิ้น
+                    </div>
+                  )}
+                  {isLowStock && (
+                    <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-bold animate-pulse">
+                      <AlertCircle className="w-4 h-4" />
+                      เหลือแค่ {product.stock} ชิ้น!
+                    </div>
+                  )}
+                </div>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 font-medium flex items-center gap-2">
                 <Truck className="w-4 h-4" />
@@ -212,7 +278,13 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
 
             {/* CTA Button */}
-            <BuyButton productId={product.id} affiliateUrl={product.affiliateUrl} />
+            {isOutOfStock ? (
+              <div className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold px-8 py-4 rounded-xl text-center text-lg cursor-not-allowed">
+                สินค้าหมด - แจ้งเตือนเมื่อมีสต็อก
+              </div>
+            ) : (
+              <BuyButton productId={product.id} affiliateUrl={product.affiliateUrl} />
+            )}
 
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t-2 border-slate-200 dark:border-slate-700">

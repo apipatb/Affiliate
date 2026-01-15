@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Star, TrendingUp, Zap, Eye } from 'lucide-react'
+import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import type { Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
@@ -20,6 +20,19 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const isPopular = product.clicks > 50
   const isTrending = product.clicks > 20
+
+  // Calculate discount percentage
+  const hasDiscount = product.originalPrice && product.originalPrice > product.price
+  const discountPercent = hasDiscount
+    ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+    : 0
+
+  // Low stock warning
+  const isLowStock = product.stock !== null && product.stock !== undefined && product.stock > 0 && product.stock <= 10
+  const isOutOfStock = product.stock !== null && product.stock !== undefined && product.stock === 0
+
+  // Hot sale indicator
+  const isHotSale = hasDiscount && discountPercent >= 30
 
   return (
     <motion.div
@@ -59,19 +72,38 @@ export default function ProductCard({ product }: { product: Product }) {
 
           {/* Badges */}
           <div className="absolute top-3 right-3 flex flex-col gap-2">
-            {product.featured && (
+            {isHotSale && (
+              <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-pulse">
+                <Flame className="w-3 h-3 fill-white" />
+                Hot Sale!
+              </div>
+            )}
+            {hasDiscount && discountPercent > 0 && (
+              <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
+                -{discountPercent}%
+              </div>
+            )}
+            {product.featured && !isHotSale && (
               <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <Star className="w-3 h-3 fill-white" />
                 แนะนำ
               </div>
             )}
-            {isTrending && (
+            {isTrending && !isHotSale && (
               <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                 <TrendingUp className="w-3 h-3" />
                 มาแรง
               </div>
             )}
           </div>
+
+          {/* Low Stock Badge - Bottom Left */}
+          {isLowStock && (
+            <div className="absolute bottom-3 left-3 bg-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg animate-pulse">
+              <AlertCircle className="w-3 h-3" />
+              เหลือแค่ {product.stock} ชิ้น!
+            </div>
+          )}
 
           {/* Views Badge */}
           {product.clicks > 0 && (

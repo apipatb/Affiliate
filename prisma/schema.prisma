@@ -30,6 +30,9 @@ model Product {
   featured     Boolean   @default(false)
   rating       Float     @default(4.8) // Average rating from Shopee (0-5)
   reviewCount  Int       @default(0)   // Number of reviews from Shopee
+  originalPrice Float?                 // Original price for comparison
+  soldCount    Int       @default(0)   // Number of items sold
+  stock        Int?                    // Stock quantity (null = unlimited)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
