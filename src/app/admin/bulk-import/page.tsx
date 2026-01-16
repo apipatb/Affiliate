@@ -17,6 +17,7 @@ export default function BulkImportPage() {
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [featured, setFeatured] = useState(false)
+  const [fetchImages, setFetchImages] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{
     total: number
@@ -39,6 +40,7 @@ export default function BulkImportPage() {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('featured', featured.toString())
+      formData.append('fetchImages', fetchImages.toString())
 
       const res = await fetch('/api/shopee/bulk-import', {
         method: 'POST',
@@ -140,17 +142,37 @@ export default function BulkImportPage() {
               </p>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={featured}
-                onChange={(e) => setFeatured(e.target.checked)}
-                className="w-4 h-4 text-primary border-slate-300 dark:border-slate-600 rounded focus:ring-primary"
-              />
-              <label htmlFor="featured" className="ml-2 text-sm text-black dark:text-slate-200">
-                ตั้งสินค้าทั้งหมดเป็นสินค้าแนะนำ
-              </label>
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  checked={featured}
+                  onChange={(e) => setFeatured(e.target.checked)}
+                  className="w-4 h-4 text-primary border-slate-300 dark:border-slate-600 rounded focus:ring-primary"
+                />
+                <label htmlFor="featured" className="ml-2 text-sm text-black dark:text-slate-200">
+                  ตั้งสินค้าทั้งหมดเป็นสินค้าแนะนำ
+                </label>
+              </div>
+
+              <div className="flex items-start">
+                <input
+                  type="checkbox"
+                  id="fetchImages"
+                  checked={fetchImages}
+                  onChange={(e) => setFetchImages(e.target.checked)}
+                  className="w-4 h-4 text-primary border-slate-300 dark:border-slate-600 rounded focus:ring-primary mt-0.5"
+                />
+                <div className="ml-2 flex-1">
+                  <label htmlFor="fetchImages" className="text-sm text-black dark:text-slate-200 font-medium">
+                    🤖 ดึงรูปภาพจาก Shopee อัตโนมัติ (ใช้เวลานาน)
+                  </label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    ⚠️ ใช้เวลาประมาณ 5-10 วินาทีต่อสินค้า • ถ้าไม่เลือกจะใช้รูป placeholder
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3">
@@ -162,7 +184,7 @@ export default function BulkImportPage() {
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    กำลัง Import...
+                    {fetchImages ? 'กำลังดึงรูป...' : 'กำลัง Import...'}
                   </>
                 ) : (
                   <>

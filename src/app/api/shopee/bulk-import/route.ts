@@ -3,7 +3,12 @@ import { requireAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { autoCategorizeBulk, getCategoryPlaceholderImage } from '@/lib/category-matcher'
 import { getShopeeProductMediaFromHTML } from '@/lib/shopee-html-scraper'
+import { extractImagesFromShopee, closeBrowser } from '@/lib/shopee-playwright-scraper'
 import { revalidatePath } from 'next/cache'
+
+// Force Node.js runtime
+export const runtime = 'nodejs'
+export const maxDuration = 60 // 1 minute max (Vercel limit)
 
 interface CSVProduct {
   productId: string
@@ -135,6 +140,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const featured = formData.get('featured') === 'true'
+    const fetchImages = formData.get('fetchImages') === 'true' // New option
 
     if (!file) {
       return NextResponse.json(
@@ -142,6 +148,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    console.log(`[Bulk Import] Options: featured=${featured}, fetchImages=${fetchImages}`)
 
     // Get all available categories for auto-categorization
     const availableCategories = await prisma.category.findMany({
@@ -197,7 +205,7 @@ export async function POST(request: NextRequest) {
         const categoryId = autoCategorizeBulk(product.title, availableCategories)
         const category = availableCategories.find(c => c.id === categoryId)
 
-        // Determine image URL (priority: CSV > Shopee API > Placeholder)
+        // Determine image URL (priority: CSV > Playwright > Placeholder)
         let imageUrl: string
         let mediaType: 'IMAGE' | 'VIDEO' = 'IMAGE'
 
@@ -205,10 +213,36 @@ export async function POST(request: NextRequest) {
           // Use image URL from CSV if provided
           imageUrl = product.imageUrl.trim()
           console.log(`[Bulk Import] 📷 Using CSV image`)
+        } else if (fetchImages && product.productLink) {
+          // Playwright is disabled on Vercel (not supported in serverless)
+          if (process.env.VERCEL) {
+            console.log(`[Bulk Import] ⚠️  Playwright disabled on Vercel, using placeholder`)
+            imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
+          } else {
+            // Try to fetch images using Playwright (local only)
+            console.log(`[Bulk Import] 🤖 Fetching images with Playwright...`)
+            try {
+              const images = await extractImagesFromShopee(product.productLink)
+              if (images.length > 0) {
+                imageUrl = images[0] // Use first image
+                console.log(`[Bulk Import] ✅ Got ${images.length} images from Shopee`)
+              } else {
+                imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
+                console.log(`[Bulk Import] ⚠️  No images found, using placeholder`)
+              }
+            } catch (error) {
+              console.error(`[Bulk Import] ❌ Playwright error:`, error)
+              imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
+              console.log(`[Bulk Import] 🎨 Using placeholder due to error`)
+            }
+
+            // Small delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 1000))
+          }
         } else {
-          // Use placeholder (auto-scraping doesn't work due to Shopee blocking)
+          // Use placeholder
           imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
-          console.log(`[Bulk Import] 🎨 Using ${category?.name} placeholder (no imageUrl in CSV)`)
+          console.log(`[Bulk Import] 🎨 Using ${category?.name} placeholder (fetchImages=false)`)
         }
 
         // Create product in database
@@ -238,6 +272,12 @@ export async function POST(request: NextRequest) {
           error: error instanceof Error ? error.message : 'Unknown error',
         })
       }
+    }
+
+    // Close browser if it was used
+    if (fetchImages) {
+      console.log(`[Bulk Import] 🛑 Closing browser...`)
+      await closeBrowser()
     }
 
     // Revalidate pages after bulk import

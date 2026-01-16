@@ -44,7 +44,16 @@
       "Bash(xargs:*)",
       "Bash(node -e:*)",
       "Bash(find:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:affiliate.shopee.co.th)",
+      "Bash(node scripts/fetch-shopee-media.js:*)",
+      "WebFetch(domain:shopee.co.th)",
+      "Bash(sudo chown:*)",
+      "Bash(node scripts/fetch-shopee-media-v2.js:*)",
+      "Bash(npx playwright install chromium)",
+      "Bash(node scripts/fetch-shopee-with-playwright.js:*)",
+      "Bash(node scripts/debug-shopee-page.js:*)",
+      "Bash(node scripts/test-one-product.js:*)"
     ]
   }
 }

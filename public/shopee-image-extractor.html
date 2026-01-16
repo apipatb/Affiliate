@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Image Extractor - ดึงรูปจาก Shopee</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .bookmarklet-section {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .bookmarklet-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            cursor: move;
+        }
+        .bookmarklet-button:hover {
+            transform: scale(1.05);
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .image-item {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+        .image-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .image-url {
+            padding: 10px;
+            font-size: 12px;
+            word-break: break-all;
+            background: white;
+        }
+        .download-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        .success {
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Shopee Image Extractor</h1>
+            <p>เครื่องมือดึงรูปภาพจากสินค้า Shopee</p>
+        </div>
+
+        <!-- Bookmarklet Section -->
+        <div class="card">
+            <h2>📌 วิธีที่ 1: ใช้ Bookmarklet (แนะนำ)</h2>
+            <div class="instructions">
+                <strong>วิธีใช้งาน:</strong>
+                <ol>
+                    <li>ลากปุ่มด้านล่างไปวางบน Bookmark Bar ของ browser</li>
+                    <li>เปิดหน้าสินค้า Shopee ที่ต้องการดึงรูป</li>
+                    <li>กดที่ bookmark ที่เพิ่งสร้าง</li>
+                    <li>รูปภาพจะถูกคัดลอกลง clipboard อัตโนมัติ</li>
+                    <li>กลับมาหน้านี้แล้ววางใน textarea ด้านล่าง</li>
+                </ol>
+            </div>
+            <div class="bookmarklet-section">
+                <p style="margin-bottom: 15px;"><strong>ลากปุ่มนี้ไปวางบน Bookmark Bar:</strong></p>
+                <a href="javascript:(function(){const images=[];document.querySelectorAll('img').forEach(img=>{const src=img.src;if(src&&(src.includes('susercontent.com')||src.includes('shopee'))&&!src.includes('_tn')&&(img.width>200||img.naturalWidth>200)){images.push(src);}});const uniqueImages=[...new Set(images)];if(uniqueImages.length>0){const result={url:window.location.href,productId:window.location.pathname.match(/\/(\d+)$/)?.[1]||'unknown',images:uniqueImages,timestamp:new Date().toISOString()};navigator.clipboard.writeText(JSON.stringify(result,null,2)).then(()=>alert('คัดลอก '+uniqueImages.length+' รูปภาพแล้ว!\nกลับไปวางในหน้า Extractor')).catch(()=>alert('Error: ไม่สามารถคัดลอกได้'));}else{alert('ไม่พบรูปภาพสินค้า');}})();" class="bookmarklet-button">📸 Extract Shopee Images</a>
+            </div>
+        </div>
+
+        <!-- Manual Input Section -->
+        <div class="card">
+            <h2>✏️ วิธีที่ 2: วาง JSON ที่คัดลอกมา</h2>
+            <p>วาง JSON ที่ได้จาก Bookmarklet หรือใส่ลิงก์รูปเอง:</p>
+            <textarea id="jsonInput" placeholder='วาง JSON ที่คัดลอกมาจาก Bookmarklet...
+
+หรือใส่ลิงก์รูปทีละบรรทัด เช่น:
+https://down-th.img.susercontent.com/file/xxx
+https://down-th.img.susercontent.com/file/yyy'></textarea>
+            <button onclick="processInput()">🔍 ดึงรูปภาพ</button>
+
+            <div id="results" class="results"></div>
+        </div>
+
+        <!-- Downloaded Images -->
+        <div class="card" id="downloadSection" style="display: none;">
+            <h2>📥 รูปภาพที่ดึงได้</h2>
+            <button onclick="downloadAllAsZip()">💾 ดาวน์โหลดทั้งหมด (ZIP)</button>
+            <button onclick="copyUrls()">📋 คัดลอกลิงก์ทั้งหมด</button>
+            <div id="imageGrid" class="image-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        let extractedImages = [];
+
+        function processInput() {
+            const input = document.getElementById('jsonInput').value.trim();
+            const resultsDiv = document.getElementById('results');
+
+            if (!input) {
+                resultsDiv.innerHTML = '<div class="error">กรุณาใส่ข้อมูล</div>';
+                return;
+            }
+
+            try {
+                // Try to parse as JSON first
+                const data = JSON.parse(input);
+                extractedImages = data.images || [];
+                displayImages(data);
+            } catch (e) {
+                // If not JSON, treat as line-separated URLs
+                const urls = input.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line && (line.startsWith('http') || line.startsWith('//')));
+
+                if (urls.length > 0) {
+                    extractedImages = urls;
+                    displayImages({
+                        url: 'Manual input',
+                        productId: 'manual',
+                        images: urls
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">ไม่พบลิงก์รูปภาพที่ถูกต้อง</div>';
+                }
+            }
+        }
+
+        function displayImages(data) {
+            const resultsDiv = document.getElementById('results');
+            const downloadSection = document.getElementById('downloadSection');
+            const imageGrid = document.getElementById('imageGrid');
+
+            resultsDiv.innerHTML = `
+                <div class="success">
+                    ✅ พบรูปภาพ ${data.images.length} รูป<br>
+                    🔗 URL: ${data.url}<br>
+                    🆔 Product ID: ${data.productId}
+                </div>
+            `;
+
+            imageGrid.innerHTML = '';
+            data.images.forEach((url, index) => {
+                const div = document.createElement('div');
+                div.className = 'image-item';
+                div.innerHTML = `
+                    <img src="${url}" alt="Product ${index + 1}" loading="lazy">
+                    <div class="image-url">
+                        <strong>#${index + 1}</strong><br>
+                        <small>${url}</small>
+                    </div>
+                    <button class="download-btn" onclick="downloadImage('${url}', 'image-${index + 1}')">
+                        ⬇️ ดาวน์โหลด
+                    </button>
+                `;
+                imageGrid.appendChild(div);
+            });
+
+            downloadSection.style.display = 'block';
+        }
+
+        function downloadImage(url, filename) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = filename + '.jpg';
+                    a.click();
+                })
+                .catch(err => alert('Error downloading: ' + err.message));
+        }
+
+        function copyUrls() {
+            const urls = extractedImages.join('\n');
+            navigator.clipboard.writeText(urls)
+                .then(() => alert('คัดลอกลิงก์ ' + extractedImages.length + ' รูปแล้ว!'))
+                .catch(err => alert('Error: ' + err.message));
+        }
+
+        async function downloadAllAsZip() {
+            alert('กำลังดาวน์โหลด... (ฟีเจอร์นี้ต้องใช้ library เพิ่มเติม)\n\nแนะนำให้ใช้ปุ่ม "คัดลอกลิงก์ทั้งหมด" แล้วนำไปใส่ใน CSV แทน');
+        }
+    </script>
+</body>
+</html>
