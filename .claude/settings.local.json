@@ -40,7 +40,9 @@
       "Bash(xargs kill:*)",
       "Bash(head:*)",
       "Bash(git fetch:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(xargs:*)",
+      "Bash(node -e:*)"
     ]
   }
 }
