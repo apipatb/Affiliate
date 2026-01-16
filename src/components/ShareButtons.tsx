@@ -20,11 +20,39 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(fullUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullUrl)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      } else {
+        // Fallback for HTTP or older browsers
+        const textArea = document.createElement('textarea')
+        textArea.value = fullUrl
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        textArea.style.top = '-9999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+
+        try {
+          const successful = document.execCommand('copy')
+          if (successful) {
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+          }
+        } catch (fallbackErr) {
+          console.error('Fallback copy failed:', fallbackErr)
+          alert('ไม่สามารถคัดลอกลิงก์ได้ กรุณาคัดลอกด้วยตัวเอง: ' + fullUrl)
+        } finally {
+          document.body.removeChild(textArea)
+        }
+      }
     } catch (err) {
       console.error('Failed to copy:', err)
+      // Show fallback message
+      alert('ไม่สามารถคัดลอกลิงก์ได้ กรุณาคัดลอกด้วยตัวเอง: ' + fullUrl)
     }
   }
 
