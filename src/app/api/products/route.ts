@@ -86,7 +86,12 @@ export async function GET(request: NextRequest) {
 
   const products = await prisma.product.findMany({
     where,
-    include: { category: true },
+    include: {
+      category: true,
+      media: {
+        orderBy: { order: 'asc' },
+      },
+    },
     orderBy,
     skip,
     take: limit,
@@ -149,7 +154,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, description, price, affiliateUrl, imageUrl, categoryId, featured, mediaType } = validation.data
+    const { title, description, price, affiliateUrl, imageUrl, categoryId, featured, mediaType, media } = validation.data
 
     // Validate categoryId exists
     const categoryExists = await prisma.category.findUnique({ where: { id: categoryId } })
@@ -160,6 +165,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Create product with media gallery
     const product = await prisma.product.create({
       data: {
         title,
@@ -170,8 +176,25 @@ export async function POST(request: NextRequest) {
         categoryId,
         featured,
         mediaType,
+        // Create ProductMedia records if media array provided
+        ...(media && media.length > 0
+          ? {
+              media: {
+                create: media.map((item: any) => ({
+                  url: item.url,
+                  type: item.type || 'IMAGE',
+                  order: item.order || 0,
+                })),
+              },
+            }
+          : {}),
       },
-      include: { category: true },
+      include: {
+        category: true,
+        media: {
+          orderBy: { order: 'asc' },
+        },
+      },
     })
 
     // Revalidate pages to show new product

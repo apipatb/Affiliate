@@ -9,6 +9,13 @@ interface Category {
   slug: string
 }
 
+interface ProductMedia {
+  id: string
+  url: string
+  type: 'IMAGE' | 'VIDEO'
+  order: number
+}
+
 interface Product {
   id: string
   title: string
@@ -22,6 +29,7 @@ interface Product {
   clicks: number
   featured: boolean
   createdAt: string
+  media?: ProductMedia[]
 }
 
 const ITEMS_PER_PAGE = 20
@@ -42,8 +50,10 @@ export default function AdminProducts() {
     categoryId: '',
     featured: false,
   })
+  const [mediaGallery, setMediaGallery] = useState<ProductMedia[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   // New state for search, pagination, and bulk operations
   const [searchTerm, setSearchTerm] = useState('')
@@ -118,10 +128,20 @@ export default function AdminProducts() {
 
     const method = editingProduct ? 'PUT' : 'POST'
 
+    // Prepare data with media gallery
+    const submitData = {
+      ...formData,
+      media: mediaGallery.map((item, index) => ({
+        url: item.url,
+        type: item.type,
+        order: index, // Use array index as order
+      })),
+    }
+
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(submitData),
     })
 
     if (res.ok) {
@@ -260,6 +280,8 @@ export default function AdminProducts() {
         categoryId: product.categoryId,
         featured: product.featured,
       })
+      // Load existing media gallery
+      setMediaGallery(product.media || [])
     } else {
       setEditingProduct(null)
       setFormData({
@@ -272,6 +294,7 @@ export default function AdminProducts() {
         categoryId: categories[0]?.id || '',
         featured: false,
       })
+      setMediaGallery([])
     }
     setShowModal(true)
   }
@@ -289,36 +312,103 @@ export default function AdminProducts() {
       categoryId: '',
       featured: false,
     })
+    setMediaGallery([])
+    setUploadError('')
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
     setUploadError('')
     setIsUploading(true)
 
-    const uploadFormData = new FormData()
-    uploadFormData.append('file', file)
-
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadFormData,
+      // Upload all files
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', file)
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Upload failed')
+        }
+
+        // Determine media type from file type
+        const type = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
+
+        return {
+          id: `temp-${Date.now()}-${Math.random()}`,
+          url: data.url,
+          type: type as 'IMAGE' | 'VIDEO',
+          order: mediaGallery.length,
+        }
       })
 
-      const data = await res.json()
+      const uploadedMedia = await Promise.all(uploadPromises)
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Upload failed')
+      // Add to gallery
+      setMediaGallery([...mediaGallery, ...uploadedMedia])
+
+      // Set first image as imageUrl if not set
+      if (!formData.imageUrl && uploadedMedia.length > 0) {
+        setFormData({ ...formData, imageUrl: uploadedMedia[0].url })
       }
-
-      setFormData({ ...formData, imageUrl: data.url })
     } catch (err: any) {
       setUploadError(err.message || 'Failed to upload file')
     } finally {
       setIsUploading(false)
+      // Reset input
+      e.target.value = ''
     }
+  }
+
+  const removeMediaItem = (index: number) => {
+    const newGallery = mediaGallery.filter((_, i) => i !== index)
+    setMediaGallery(newGallery)
+
+    // If removed the primary image, set new primary
+    if (mediaGallery[index].url === formData.imageUrl && newGallery.length > 0) {
+      setFormData({ ...formData, imageUrl: newGallery[0].url })
+    } else if (newGallery.length === 0) {
+      setFormData({ ...formData, imageUrl: '' })
+    }
+  }
+
+  const setPrimaryImage = (index: number) => {
+    setFormData({ ...formData, imageUrl: mediaGallery[index].url })
+  }
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index)
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+
+    if (draggedIndex === null || draggedIndex === index) return
+
+    const newGallery = [...mediaGallery]
+    const draggedItem = newGallery[draggedIndex]
+
+    // Remove from old position
+    newGallery.splice(draggedIndex, 1)
+
+    // Insert at new position
+    newGallery.splice(index, 0, draggedItem)
+
+    setMediaGallery(newGallery)
+    setDraggedIndex(index)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
   }
 
   const goToPage = (page: number) => {
@@ -799,56 +889,130 @@ export default function AdminProducts() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">ประเภทสื่อ</label>
-                  <select
-                    value={formData.mediaType}
-                    onChange={(e) => setFormData({ ...formData, mediaType: e.target.value as 'IMAGE' | 'VIDEO' })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-slate-900 dark:text-white font-medium transition-all"
-                    required
-                  >
-                    <option value="IMAGE">รูปภาพ</option>
-                    <option value="VIDEO">วิดีโอ</option>
-                  </select>
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
-                    {formData.mediaType === 'VIDEO' ? 'วิดีโอ' : 'รูปภาพ'} URL หรือ อัปโหลด
-                  </label>
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={formData.imageUrl}
-                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                      placeholder="https://example.com/media.mp4"
-                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-slate-900 dark:text-white font-medium transition-all"
-                      required
-                    />
-                    <div className="flex items-center gap-3">
-                      <label className={`
-                        flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-primary transition-all text-sm font-semibold text-slate-700 dark:text-slate-300
-                        ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}
-                      `}>
-                        <Plus className="w-4 h-4" />
-                        {isUploading ? 'กำลังอัปโหลด...' : 'เลือกไฟล์เพื่ออัปโหลด'}
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={handleFileUpload}
-                          accept={formData.mediaType === 'VIDEO' ? 'video/*,video/mp4,video/x-m4v,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/webm,video/ogg,.mkv,.mov,.avi,.wmv,.flv,.webm,.mp4' : 'image/*'}
-                          disabled={isUploading}
-                        />
-                      </label>
-                      {formData.imageUrl && (
-                        <span className="text-sm text-green-600 dark:text-green-400 font-semibold">✓ อัปโหลดเรียบร้อยแล้ว</span>
-                      )}
+              {/* Media Gallery Upload Section */}
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold mb-3 text-slate-700 dark:text-slate-300">
+                  รูปภาพและวิดีโอสินค้า
+                </label>
+
+                {/* Upload Button */}
+                <label className={`
+                  flex items-center justify-center gap-3 px-6 py-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-primary transition-all
+                  ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}
+                `}>
+                  <Plus className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    {isUploading ? 'กำลังอัปโหลด...' : 'เลือกรูปภาพหรือวิดีโอ (หลายไฟล์)'}
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    accept="image/*,video/*"
+                    multiple
+                    disabled={isUploading}
+                  />
+                </label>
+
+                {uploadError && (
+                  <p className="text-sm text-red-500 dark:text-red-400 font-semibold mt-2">{uploadError}</p>
+                )}
+
+                {/* Media Gallery Preview */}
+                {mediaGallery.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold">
+                      ลากเพื่อจัดเรียงลำดับ • คลิกดาวเพื่อกำหนดเป็นรูปหลัก • คลิก X เพื่อลบ
+                    </p>
+                    <div className="grid grid-cols-4 gap-3">
+                      {mediaGallery.map((media, index) => (
+                        <div
+                          key={media.id}
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragEnd={handleDragEnd}
+                          className={`
+                            relative aspect-square rounded-lg overflow-hidden border-2 cursor-move group
+                            ${media.url === formData.imageUrl
+                              ? 'border-primary ring-2 ring-primary/30'
+                              : 'border-slate-200 dark:border-slate-600 hover:border-primary/50'}
+                            ${draggedIndex === index ? 'opacity-50' : ''}
+                            transition-all
+                          `}
+                        >
+                          {/* Media Preview */}
+                          {media.type === 'VIDEO' ? (
+                            <div className="relative w-full h-full bg-slate-900">
+                              <video
+                                src={media.url}
+                                className="w-full h-full object-cover"
+                                muted
+                                playsInline
+                              />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <Video className="w-6 h-6 text-white" />
+                              </div>
+                            </div>
+                          ) : (
+                            <img
+                              src={media.url}
+                              alt={`Media ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+
+                          {/* Overlay Controls */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                            {/* Set as Primary Button */}
+                            <button
+                              type="button"
+                              onClick={() => setPrimaryImage(index)}
+                              className={`
+                                p-2 rounded-full transition-all
+                                ${media.url === formData.imageUrl
+                                  ? 'bg-yellow-500 text-white'
+                                  : 'bg-white/90 text-slate-700 hover:bg-yellow-500 hover:text-white'}
+                              `}
+                              title="กำหนดเป็นรูปหลัก"
+                            >
+                              <Star className={`w-4 h-4 ${media.url === formData.imageUrl ? 'fill-white' : ''}`} />
+                            </button>
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => removeMediaItem(index)}
+                              className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+                              title="ลบ"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Primary Badge */}
+                          {media.url === formData.imageUrl && (
+                            <div className="absolute top-1 left-1 bg-yellow-500 text-white px-2 py-0.5 rounded text-xs font-bold">
+                              หลัก
+                            </div>
+                          )}
+
+                          {/* Order Number */}
+                          <div className="absolute top-1 right-1 bg-black/60 text-white px-2 py-0.5 rounded text-xs font-bold">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    {uploadError && (
-                      <p className="text-sm text-red-500 dark:text-red-400 font-semibold">{uploadError}</p>
-                    )}
                   </div>
-                </div>
+                )}
+
+                {/* Legacy imageUrl field (hidden, auto-populated) */}
+                <input
+                  type="hidden"
+                  value={formData.imageUrl}
+                  required={mediaGallery.length === 0}
+                />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">URL แอฟฟิลิเอท</label>

@@ -12,7 +12,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   const product = await prisma.product.findUnique({
     where: { id },
-    include: { category: true },
+    include: {
+      category: true,
+      media: {
+        orderBy: { order: 'asc' },
+      },
+    },
   })
 
   if (!product) {
@@ -49,10 +54,39 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       )
     }
 
+    const { media, ...updateData } = validation.data
+
+    // If media array is provided, delete old media and create new ones
+    if (media !== undefined) {
+      // Delete existing media
+      await prisma.productMedia.deleteMany({
+        where: { productId: id },
+      })
+    }
+
     const product = await prisma.product.update({
       where: { id },
-      data: validation.data,
-      include: { category: true },
+      data: {
+        ...updateData,
+        // Create new ProductMedia records if media array provided
+        ...(media && media.length > 0
+          ? {
+              media: {
+                create: media.map((item: any) => ({
+                  url: item.url,
+                  type: item.type || 'IMAGE',
+                  order: item.order || 0,
+                })),
+              },
+            }
+          : {}),
+      },
+      include: {
+        category: true,
+        media: {
+          orderBy: { order: 'asc' },
+        },
+      },
     })
 
     // Revalidate pages to show updated product
