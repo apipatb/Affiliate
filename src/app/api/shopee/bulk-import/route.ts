@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
         const created = await prisma.product.create({
           data: {
             title: product.title,
-            description: `${product.title}\n\nร้านค้า: ${product.shopName}\nยอดขาย: ${product.sales}\nค่าคอมมิชชั่น: ${product.commission} (${product.commissionRate})`,
+            description: `${product.title}\n\nร้านค้า: ${product.shopName}\nยอดขาย: ${product.sales}`,
             price: product.price,
             affiliateUrl: product.affiliateLink,
             imageUrl,

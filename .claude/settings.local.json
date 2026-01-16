@@ -42,7 +42,9 @@
       "Bash(git fetch:*)",
       "Bash(grep:*)",
       "Bash(xargs:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)"
     ]
   }
 }
