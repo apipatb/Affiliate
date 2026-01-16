@@ -122,6 +122,12 @@ export default function AdminProducts() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Validate at least one image
+    if (!formData.imageUrl && mediaGallery.length === 0) {
+      alert('กรุณาใส่ URL รูปภาพหรืออัปโหลดรูปภาพอย่างน้อย 1 รูป')
+      return
+    }
+
     const url = editingProduct
       ? `/api/products/${editingProduct.id}`
       : '/api/products'
@@ -147,6 +153,9 @@ export default function AdminProducts() {
     if (res.ok) {
       fetchProducts()
       closeModal()
+    } else {
+      const error = await res.json()
+      alert(`เกิดข้อผิดพลาด: ${error.error || 'Unknown error'}`)
     }
   }
 
@@ -409,6 +418,37 @@ export default function AdminProducts() {
 
   const handleDragEnd = () => {
     setDraggedIndex(null)
+  }
+
+  const addMediaFromUrl = () => {
+    const url = prompt('ใส่ URL ของรูปภาพหรือวิดีโอ:')
+    if (!url) return
+
+    // Validate URL
+    try {
+      new URL(url)
+    } catch {
+      alert('URL ไม่ถูกต้อง กรุณาใส่ URL ที่ถูกต้อง')
+      return
+    }
+
+    // Determine type from URL
+    const isVideo = /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(url)
+    const type: 'IMAGE' | 'VIDEO' = isVideo ? 'VIDEO' : 'IMAGE'
+
+    const newMedia: ProductMedia = {
+      id: `temp-url-${Date.now()}`,
+      url: url,
+      type: type,
+      order: mediaGallery.length,
+    }
+
+    setMediaGallery([...mediaGallery, newMedia])
+
+    // Set as primary if no primary set
+    if (!formData.imageUrl) {
+      setFormData({ ...formData, imageUrl: url })
+    }
   }
 
   const goToPage = (page: number) => {
@@ -895,32 +935,83 @@ export default function AdminProducts() {
                   รูปภาพและวิดีโอสินค้า
                 </label>
 
-                {/* Upload Button */}
-                <label className={`
-                  flex items-center justify-center gap-3 px-6 py-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-primary transition-all
-                  ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}
-                `}>
-                  <Plus className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {isUploading ? 'กำลังอัปโหลด...' : 'เลือกรูปภาพหรือวิดีโอ (หลายไฟล์)'}
-                  </span>
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                    accept="image/*,video/*"
-                    multiple
-                    disabled={isUploading}
-                  />
-                </label>
+                {/* Upload Options */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* Upload File Button */}
+                  <label className={`
+                    flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-primary transition-all
+                    ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}
+                  `}>
+                    <Plus className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      {isUploading ? 'กำลังอัปโหลด...' : 'อัปโหลดไฟล์'}
+                    </span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      accept="image/*,video/*"
+                      multiple
+                      disabled={isUploading}
+                    />
+                  </label>
+
+                  {/* Add from URL Button */}
+                  <button
+                    type="button"
+                    onClick={addMediaFromUrl}
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-primary transition-all text-sm font-semibold text-slate-700 dark:text-slate-300"
+                  >
+                    <Plus className="w-5 h-5" />
+                    เพิ่มจาก URL
+                  </button>
+                </div>
 
                 {uploadError && (
                   <p className="text-sm text-red-500 dark:text-red-400 font-semibold mt-2">{uploadError}</p>
                 )}
 
+                {/* Primary Image URL Input */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    URL รูปหลัก (Primary Image) - สำหรับ CSV Import
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className="flex-1 px-3 py-2 text-sm border-2 border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                      placeholder="https://example.com/image.jpg (Optional - ใส่ URL หรือ upload ก็ได้)"
+                    />
+                    {formData.imageUrl && !mediaGallery.some(m => m.url === formData.imageUrl) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const isVideo = /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(formData.imageUrl)
+                          setMediaGallery([...mediaGallery, {
+                            id: `temp-primary-${Date.now()}`,
+                            url: formData.imageUrl,
+                            type: isVideo ? 'VIDEO' : 'IMAGE',
+                            order: mediaGallery.length,
+                          }])
+                        }}
+                        className="px-3 py-2 text-xs font-semibold bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors whitespace-nowrap"
+                      >
+                        + Gallery
+                      </button>
+                    )}
+                  </div>
+                  {formData.imageUrl && (
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-semibold">
+                      ✓ URL นี้จะถูกใช้เป็นรูปหลัก
+                    </p>
+                  )}
+                </div>
+
                 {/* Media Gallery Preview */}
                 {mediaGallery.length > 0 && (
-                  <div className="mt-4 space-y-3">
+                  <div className="space-y-3">
                     <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold">
                       ลากเพื่อจัดเรียงลำดับ • คลิกดาวเพื่อกำหนดเป็นรูปหลัก • คลิก X เพื่อลบ
                     </p>
