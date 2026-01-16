@@ -14,12 +14,12 @@ export const productSchema = z.object({
     })
   ]),
   affiliateUrl: z.string().url('Invalid affiliate URL').min(1, 'Affiliate URL is required'),
-  imageUrl: z.string().optional().default(''),
+  imageUrl: z.string().default(''),
   categoryId: z.string().cuid('Invalid category ID'),
   featured: z.boolean().optional().default(false),
   mediaType: z.enum(['IMAGE', 'VIDEO']).optional().default('IMAGE'),
   media: z.array(z.object({
-    url: z.string().url('Invalid media URL'),
+    url: z.string().min(1, 'Media URL is required'),
     type: z.enum(['IMAGE', 'VIDEO']),
     order: z.number().int().min(0),
   })).optional().default([]),
