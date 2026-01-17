@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import AdminLayout from '@/components/AdminLayout'
 import { Download, Link as LinkIcon, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 interface ScrapedProduct {
@@ -134,8 +133,7 @@ export default function ScraperPage() {
   }
 
   return (
-    <AdminLayout>
-      <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
             🔗 Shopee Affiliate Scraper
@@ -326,7 +324,6 @@ export default function ScraperPage() {
             </div>
           </div>
         )}
-      </div>
-    </AdminLayout>
+    </div>
   )
 }

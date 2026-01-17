@@ -190,12 +190,12 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                   <p className="text-slate-600 dark:text-slate-400">
                     ลองเลือกหมวดหมู่อื่นหรือค้นหาด้วยคำค้นที่ต่างกัน
                   </p>
-                  <button
-                    onClick={() => window.location.href = '/products'}
-                    className="mt-6 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                  <a
+                    href="/products"
+                    className="mt-6 inline-block px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                   >
                     ดูสินค้าทั้งหมด
-                  </button>
+                  </a>
                 </div>
               </div>
             ) : (

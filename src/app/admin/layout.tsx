@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Package, FolderOpen, ArrowLeft, LogOut, User, Shield, Download, UploadCloud, Image } from 'lucide-react'
+import { LayoutDashboard, Package, FolderOpen, ArrowLeft, LogOut, User, Shield, Download, UploadCloud, Image, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -13,6 +13,7 @@ const navItems = [
   { href: '/admin/bulk-import', label: 'Import CSV (จำนวนมาก)', icon: UploadCloud },
   { href: '/admin/image-extractor', label: 'ดึงรูป Shopee', icon: Image },
   { href: '/admin/import', label: 'Import Shopee', icon: Download },
+  { href: '/admin/shopee-connect', label: 'เชื่อมต่อ Shopee', icon: Link2 },
 ]
 
 interface UserSession {

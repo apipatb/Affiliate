@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
           console.log(`[Bulk Import] 📷 Using CSV image`)
         } else if (fetchImages && product.productLink) {
           // Playwright is disabled on Vercel (not supported in serverless)
-          if (process.env.VERCEL) {
+          if (process.env.VERCEL_ENV) {
             console.log(`[Bulk Import] ⚠️  Playwright disabled on Vercel, using placeholder`)
             imageUrl = getCategoryPlaceholderImage(category?.slug || 'home')
           } else {

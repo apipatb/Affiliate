@@ -53,7 +53,12 @@
       "Bash(npx playwright install chromium)",
       "Bash(node scripts/fetch-shopee-with-playwright.js:*)",
       "Bash(node scripts/debug-shopee-page.js:*)",
-      "Bash(node scripts/test-one-product.js:*)"
+      "Bash(node scripts/test-one-product.js:*)",
+      "Bash(npm run lint:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(echo:*)",
+      "Bash(npx playwright install:*)",
+      "Bash(sqlite3:*)"
     ]
   }
 }

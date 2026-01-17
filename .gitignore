@@ -52,3 +52,6 @@ prisma/dev.db-journal
 public/uploads/*
 !public/uploads/.gitkeep
 .env*.local
+
+# playwright session (shopee login)
+.playwright-session/

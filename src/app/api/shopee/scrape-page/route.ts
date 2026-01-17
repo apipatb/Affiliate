@@ -18,8 +18,8 @@ const randomDelay = async (minSec: number = 2, maxSec: number = 3) => {
 export async function POST(request: NextRequest) {
   try {
     // Check auth
-    const auth = await requireAuth()
-    if (!auth.user || auth.user.role !== 'ADMIN') {
+    const auth = await requireAuth(request)
+    if (!auth.session || auth.session.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

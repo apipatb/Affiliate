@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, X, SlidersHorizontal, Star, TrendingUp, Clock, DollarSign, Filter } from 'lucide-react'
 import PriceRangeFilter from './PriceRangeFilter'
@@ -27,8 +27,8 @@ export default function ProductFilters({
 }: ProductFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [search, setSearch] = useState(currentSearch || '')
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const currentSort = searchParams.get('sort') || 'newest'
   const currentMinRating = searchParams.get('minRating') || ''
@@ -50,12 +50,22 @@ export default function ProductFilters({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    updateFilters('search', search || null)
+    const searchValue = searchInputRef.current?.value.trim() || ''
+    updateFilters('search', searchValue || null)
+  }
+
+  const clearSearch = () => {
+    if (searchInputRef.current) {
+      searchInputRef.current.value = ''
+    }
+    updateFilters('search', null)
   }
 
   const clearFilters = () => {
+    if (searchInputRef.current) {
+      searchInputRef.current.value = ''
+    }
     router.push('/products')
-    setSearch('')
   }
 
   const hasFilters = currentCategory || currentSearch || currentSort !== 'newest' || currentMinRating
@@ -85,20 +95,17 @@ export default function ProductFilters({
         </h3>
         <form onSubmit={handleSearch} className="relative">
           <input
+            ref={searchInputRef}
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            defaultValue={currentSearch || ''}
             placeholder="พิมพ์ชื่อสินค้าที่ต้องการ..."
             className="w-full pl-10 pr-10 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm text-slate-900 dark:text-white font-medium transition-all"
           />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          {search && (
+          {currentSearch && (
             <button
               type="button"
-              onClick={() => {
-                setSearch('')
-                updateFilters('search', null)
-              }}
+              onClick={clearSearch}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="w-4 h-4" />

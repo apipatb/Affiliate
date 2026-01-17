@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Providers from "@/components/Providers";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
               <p>© 2025 กอล์ฟรีวิว สงวนลิขสิทธิ์</p>
             </div>
           </footer>
+          <ExitIntentPopup />
         </Providers>
       </body>
     </html>

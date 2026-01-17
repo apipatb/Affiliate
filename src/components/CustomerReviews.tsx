@@ -1,8 +1,8 @@
 'use client'
 
-import { Star, ThumbsUp, User, VerifiedIcon, X } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { Star, ThumbsUp, User, VerifiedIcon, X, Send, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 
 interface ReviewMedia {
   id: string
@@ -16,10 +16,19 @@ interface Review {
   userName: string
   rating: number
   comment: string
-  date: string
+  createdAt: string
   verified: boolean
   helpful: number
   media?: ReviewMedia[]
+}
+
+interface ReviewsResponse {
+  reviews: Review[]
+  total: number
+  totalPages: number
+  currentPage: number
+  averageRating: number
+  distribution: { [key: number]: number }
 }
 
 interface CustomerReviewsProps {
@@ -28,87 +37,78 @@ interface CustomerReviewsProps {
   reviewCount: number
 }
 
-// Mock reviews data - in production, this would come from your database
-const mockReviews: Review[] = [
-  {
-    id: '1',
-    userName: 'สมชาย ใจดี',
-    rating: 5,
-    comment: 'สินค้าดีมาก คุณภาพเยี่ยม ตรงตามที่โฆษณา จัดส่งเร็วมาก แนะนำเลยครับ',
-    date: '2026-01-10',
-    verified: true,
-    helpful: 24,
-    media: [
-      { id: '1', url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', type: 'IMAGE', order: 0 },
-      { id: '2', url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', type: 'IMAGE', order: 1 },
-      { id: '3', url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400', type: 'IMAGE', order: 2 },
-    ],
-  },
-  {
-    id: '2',
-    userName: 'วิภา สุขสันต์',
-    rating: 4,
-    comment: 'โดยรวมดีครับ แต่การจัดส่งช้าไปหน่อย สินค้าดีตามที่คาดหวัง',
-    date: '2026-01-08',
-    verified: true,
-    helpful: 12,
-    media: [
-      { id: '4', url: 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400', type: 'IMAGE', order: 0 },
-    ],
-  },
-  {
-    id: '3',
-    userName: 'ประยุทธ์ มั่นคง',
-    rating: 5,
-    comment: 'ของดีมาก ราคาคุ้มค่า ใช้งานได้จริง แนะนำให้เพื่อนๆ ต่อแล้ว',
-    date: '2026-01-05',
-    verified: false,
-    helpful: 8,
-  },
-  {
-    id: '4',
-    userName: 'สุดา ยิ้มแย้ม',
-    rating: 5,
-    comment: 'ประทับใจมากค่ะ บรรจุภัณฑ์ดี สินค้าไม่เสียหาย ใช้งานได้ดีเยี่ยม',
-    date: '2026-01-03',
-    verified: true,
-    helpful: 15,
-    media: [
-      { id: '5', url: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=400', type: 'IMAGE', order: 0 },
-      { id: '6', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', type: 'IMAGE', order: 1 },
-    ],
-  },
-  {
-    id: '5',
-    userName: 'อนุชา พรหมมา',
-    rating: 3,
-    comment: 'ตามราคา สินค้าก็โอเค แต่คุณภาพไม่เยี่ยมมาก อาจต้องปรับปรุง',
-    date: '2025-12-28',
-    verified: true,
-    helpful: 5,
-  },
-]
-
 export default function CustomerReviews({
   productId,
-  productRating,
-  reviewCount,
+  productRating: initialRating,
+  reviewCount: initialCount,
 }: CustomerReviewsProps) {
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedFilter, setSelectedFilter] = useState<'all' | number>('all')
   const [helpfulClicked, setHelpfulClicked] = useState<Set<string>>(new Set())
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [showWriteReview, setShowWriteReview] = useState(false)
+  const [total, setTotal] = useState(initialCount)
+  const [averageRating, setAverageRating] = useState(initialRating)
+  const [distribution, setDistribution] = useState<{ [key: number]: number }>({
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0
+  })
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
-  const filteredReviews =
-    selectedFilter === 'all'
-      ? mockReviews
-      : mockReviews.filter((review) => review.rating === selectedFilter)
+  // Form state
+  const [formData, setFormData] = useState({
+    userName: '',
+    userEmail: '',
+    rating: 5,
+    comment: '',
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => ({
-    rating,
-    count: mockReviews.filter((r) => r.rating === rating).length,
-    percentage:
-      (mockReviews.filter((r) => r.rating === rating).length / mockReviews.length) * 100,
-  }))
+  // Fetch reviews
+  const fetchReviews = async (filterRating?: number, pageNum: number = 1) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({ page: pageNum.toString(), limit: '10' })
+      if (filterRating) {
+        params.set('rating', filterRating.toString())
+      }
+
+      const res = await fetch(`/api/products/${productId}/reviews?${params}`)
+      const data: ReviewsResponse = await res.json()
+
+      if (pageNum === 1) {
+        setReviews(data.reviews)
+      } else {
+        setReviews(prev => [...prev, ...data.reviews])
+      }
+      setTotal(data.total)
+      setTotalPages(data.totalPages)
+      setAverageRating(data.averageRating)
+      setDistribution(data.distribution)
+    } catch (error) {
+      console.error('Failed to fetch reviews:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchReviews()
+  }, [productId])
+
+  const handleFilterChange = (filter: 'all' | number) => {
+    setSelectedFilter(filter)
+    setPage(1)
+    fetchReviews(filter === 'all' ? undefined : filter, 1)
+  }
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1
+    setPage(nextPage)
+    fetchReviews(selectedFilter === 'all' ? undefined : selectedFilter, nextPage)
+  }
 
   const handleHelpful = (reviewId: string) => {
     setHelpfulClicked((prev) => {
@@ -122,6 +122,36 @@ export default function CustomerReviews({
     })
   }
 
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setSubmitMessage(null)
+
+    try {
+      const res = await fetch(`/api/products/${productId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setSubmitMessage({ type: 'success', text: data.message })
+        setFormData({ userName: '', userEmail: '', rating: 5, comment: '' })
+        setShowWriteReview(false)
+        // Refresh reviews
+        fetchReviews()
+      } else {
+        setSubmitMessage({ type: 'error', text: data.error })
+      }
+    } catch {
+      setSubmitMessage({ type: 'error', text: 'เกิดข้อผิดพลาด กรุณาลองใหม่' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('th-TH', {
@@ -131,27 +161,167 @@ export default function CustomerReviews({
     })
   }
 
+  const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => ({
+    rating,
+    count: distribution[rating] || 0,
+    percentage: total > 0 ? ((distribution[rating] || 0) / total) * 100 : 0,
+  }))
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-200 dark:border-slate-700 p-6 lg:p-8">
-      <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-        รีวิวจากลูกค้า
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+          รีวิวจากลูกค้า
+        </h2>
+        <button
+          onClick={() => setShowWriteReview(!showWriteReview)}
+          className="bg-primary hover:bg-primary/90 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+        >
+          <Send className="w-4 h-4" />
+          เขียนรีวิว
+        </button>
+      </div>
+
+      {/* Write Review Form */}
+      {showWriteReview && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mb-8 p-6 bg-slate-50 dark:bg-slate-900 rounded-xl border-2 border-primary/20"
+        >
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+            แบ่งปันประสบการณ์ของคุณ
+          </h3>
+
+          {submitMessage && (
+            <div className={`mb-4 p-3 rounded-lg ${
+              submitMessage.type === 'success'
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+            }`}>
+              {submitMessage.text}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmitReview} className="space-y-4">
+            {/* Rating */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                ให้คะแนน *
+              </label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, rating: star })}
+                    className="p-1 transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={`w-8 h-8 ${
+                        star <= formData.rating
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : 'text-slate-300 dark:text-slate-600'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                ชื่อของคุณ *
+              </label>
+              <input
+                type="text"
+                value={formData.userName}
+                onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+                placeholder="เช่น สมชาย ใจดี"
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:outline-none"
+                required
+              />
+            </div>
+
+            {/* Email (optional) */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                อีเมล (ไม่บังคับ)
+              </label>
+              <input
+                type="email"
+                value={formData.userEmail}
+                onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
+                placeholder="example@email.com"
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:outline-none"
+              />
+              <p className="text-xs text-slate-500 mt-1">ใส่อีเมลเพื่อรับการแจ้งเตือนเมื่อมีคนตอบรีวิวของคุณ</p>
+            </div>
+
+            {/* Comment */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                ความคิดเห็น *
+              </label>
+              <textarea
+                value={formData.comment}
+                onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                placeholder="บอกเล่าประสบการณ์การใช้งานสินค้า... (อย่างน้อย 10 ตัวอักษร)"
+                rows={4}
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:outline-none resize-none"
+                required
+                minLength={10}
+              />
+            </div>
+
+            {/* Submit */}
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    กำลังส่ง...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    ส่งรีวิว
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowWriteReview(false)}
+                className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-6 py-3 rounded-lg transition-colors hover:bg-slate-300 dark:hover:bg-slate-600"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      )}
 
       {/* Rating Summary */}
       <div className="grid md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-slate-200 dark:border-slate-700">
         {/* Overall Rating */}
         <div className="flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900 rounded-xl p-6">
           <div className="text-5xl font-extrabold text-primary dark:text-blue-400 mb-2">
-            {productRating.toFixed(1)}
+            {averageRating.toFixed(1)}
           </div>
           <div className="flex items-center gap-1 mb-2">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
                 className={`w-6 h-6 ${
-                  i < Math.floor(productRating)
+                  i < Math.floor(averageRating)
                     ? 'text-yellow-400 fill-yellow-400'
-                    : i < Math.ceil(productRating)
+                    : i < Math.ceil(averageRating)
                     ? 'text-yellow-400 fill-yellow-400 opacity-50'
                     : 'text-slate-300 dark:text-slate-600'
                 }`}
@@ -159,7 +329,7 @@ export default function CustomerReviews({
             ))}
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            จาก {reviewCount.toLocaleString('th-TH')} รีวิว
+            จาก {total.toLocaleString('th-TH')} รีวิว
           </p>
         </div>
 
@@ -168,7 +338,7 @@ export default function CustomerReviews({
           {ratingDistribution.map(({ rating, count, percentage }) => (
             <button
               key={rating}
-              onClick={() => setSelectedFilter(rating)}
+              onClick={() => handleFilterChange(rating)}
               className={`w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors ${
                 selectedFilter === rating ? 'bg-slate-100 dark:bg-slate-900' : ''
               }`}
@@ -198,45 +368,72 @@ export default function CustomerReviews({
       {/* Filter Buttons */}
       <div className="flex flex-wrap gap-2 mb-6">
         <button
-          onClick={() => setSelectedFilter('all')}
+          onClick={() => handleFilterChange('all')}
           className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
             selectedFilter === 'all'
               ? 'bg-primary text-white'
               : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
           }`}
         >
-          ทั้งหมด ({mockReviews.length})
+          ทั้งหมด ({total})
         </button>
         {[5, 4, 3, 2, 1].map((rating) => (
           <button
             key={rating}
-            onClick={() => setSelectedFilter(rating)}
+            onClick={() => handleFilterChange(rating)}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
               selectedFilter === rating
                 ? 'bg-primary text-white'
                 : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
             }`}
           >
-            {rating} ดาว
+            {rating} ดาว ({distribution[rating] || 0})
           </button>
         ))}
       </div>
 
       {/* Reviews List */}
       <div className="space-y-6">
-        {filteredReviews.length === 0 ? (
+        {loading && reviews.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-slate-600 dark:text-slate-400">
-              ไม่มีรีวิวสำหรับตัวกรองนี้
-            </p>
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary mb-4" />
+            <p className="text-slate-600 dark:text-slate-400">กำลังโหลดรีวิว...</p>
+          </div>
+        ) : reviews.length === 0 ? (
+          <div className="text-center py-12">
+            {selectedFilter !== 'all' ? (
+              <>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  ไม่มีรีวิว {selectedFilter} ดาว
+                </p>
+                <button
+                  onClick={() => handleFilterChange('all')}
+                  className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold px-6 py-3 rounded-lg transition-colors"
+                >
+                  ดูรีวิวทั้งหมด
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  ยังไม่มีรีวิวสำหรับสินค้านี้
+                </p>
+                <button
+                  onClick={() => setShowWriteReview(true)}
+                  className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-3 rounded-lg transition-colors"
+                >
+                  เป็นคนแรกที่รีวิว!
+                </button>
+              </>
+            )}
           </div>
         ) : (
-          filteredReviews.map((review, index) => (
+          reviews.map((review, index) => (
             <motion.div
               key={review.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.05 }}
               className="bg-slate-50 dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-700"
             >
               {/* Review Header */}
@@ -271,7 +468,7 @@ export default function CustomerReviews({
                         ))}
                       </div>
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        {formatDate(review.date)}
+                        {formatDate(review.createdAt)}
                       </span>
                     </div>
                   </div>
@@ -344,10 +541,21 @@ export default function CustomerReviews({
       </div>
 
       {/* Load More Button */}
-      {filteredReviews.length > 0 && filteredReviews.length < reviewCount && (
+      {reviews.length > 0 && page < totalPages && (
         <div className="mt-8 text-center">
-          <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white font-bold px-8 py-3 rounded-xl transition-colors">
-            โหลดรีวิวเพิ่มเติม
+          <button
+            onClick={handleLoadMore}
+            disabled={loading}
+            className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white font-bold px-8 py-3 rounded-xl transition-colors disabled:opacity-50"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                กำลังโหลด...
+              </span>
+            ) : (
+              'โหลดรีวิวเพิ่มเติม'
+            )}
           </button>
         </div>
       )}

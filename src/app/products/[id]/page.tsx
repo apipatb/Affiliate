@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, TrendingUp, Eye, Users, Heart, Flame, AlertCircle, Package, Crown, Award, Sparkles } from 'lucide-react'
+import { ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, TrendingUp, Eye, Heart, Flame, AlertCircle, Package, Crown, Award, Sparkles } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
 import BuyButton from '@/components/BuyButton'
 import StickyBuyButton from '@/components/StickyBuyButton'
@@ -101,7 +101,6 @@ export default async function ProductPage({ params }: PageProps) {
 
   const isPopular = product.clicks > 50
   const isTrending = product.clicks > 20
-  const viewersToday = Math.floor(product.clicks * 0.3) + Math.floor(Math.random() * 10) // Simulate today's viewers
 
   // Calculate discount percentage
   const hasDiscount = product.originalPrice && product.originalPrice > product.price
@@ -357,14 +356,8 @@ export default async function ProductPage({ params }: PageProps) {
             <div className="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                 <Eye className="w-5 h-5 text-blue-500" />
-                <span className="text-sm font-semibold">{product.clicks.toLocaleString('th-TH')} ครั้ง</span>
+                <span className="text-sm font-semibold">ดูแล้ว {product.clicks.toLocaleString('th-TH')} ครั้ง</span>
               </div>
-              {viewersToday > 0 && (
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                  <Users className="w-5 h-5 text-green-500" />
-                  <span className="text-sm font-semibold">{viewersToday} คนกำลังดู</span>
-                </div>
-              )}
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => {
                   const rating = product.rating || 4.8
