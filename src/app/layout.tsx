@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Providers from "@/components/Providers";
@@ -27,6 +28,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className="scroll-smooth">
+      <head>
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased pt-16`}
       >

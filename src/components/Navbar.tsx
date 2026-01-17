@@ -35,6 +35,9 @@ export default function Navbar() {
                                 <Link href="/categories" className="text-sm font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors">
                                     หมวดหมู่
                                 </Link>
+                                <Link href="/blog" className="text-sm font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors">
+                                    บทความ
+                                </Link>
                                 <Link href="/about" className="text-sm font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors">
                                     เกี่ยวกับเรา
                                 </Link>
@@ -108,6 +111,13 @@ export default function Navbar() {
                                     onClick={closeMobileMenu}
                                 >
                                     หมวดหมู่
+                                </Link>
+                                <Link
+                                    href="/blog"
+                                    className="text-base font-medium text-black dark:text-slate-200 hover:text-primary dark:hover:text-primary transition-colors py-2"
+                                    onClick={closeMobileMenu}
+                                >
+                                    บทความ
                                 </Link>
                                 <Link
                                     href="/about"

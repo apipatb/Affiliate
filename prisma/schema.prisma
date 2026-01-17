@@ -128,3 +128,29 @@ model ProductMedia {
   @@index([productId, order])
   @@index([type])
 }
+
+// Blog system for SEO content
+model BlogPost {
+  id          String       @id @default(cuid())
+  title       String
+  slug        String       @unique
+  excerpt     String       @db.Text // Short description for SEO
+  content     String       @db.Text // Full content (HTML/Markdown)
+  coverImage  String?      // Cover image URL
+  published   Boolean      @default(false)
+  featured    Boolean      @default(false)
+  views       Int          @default(0)
+  author      String       @default("Admin")
+  tags        String[]     // Array of tags
+  metaTitle   String?      // SEO meta title
+  metaDesc    String?      // SEO meta description
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  publishedAt DateTime?
+
+  @@index([published])
+  @@index([slug])
+  @@index([featured])
+  @@index([createdAt])
+  @@index([publishedAt])
+}

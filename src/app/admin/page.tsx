@@ -14,7 +14,6 @@ async function getStats() {
     totalClicks,
     featuredCount,
     recentProducts,
-    platformStats,
     categoryStats,
   ] = await Promise.all([
     prisma.product.count(),
@@ -28,12 +27,6 @@ async function getStats() {
       orderBy: { createdAt: 'desc' },
       include: { category: true },
     }),
-    // Get product count by platform
-    (prisma.product.groupBy as any)({
-      by: ['platform'],
-      _count: { id: true },
-      _sum: { clicks: true },
-    }),
     // Get top categories by product count
     prisma.category.findMany({
       include: {
@@ -45,6 +38,20 @@ async function getStats() {
       take: 5,
     }),
   ])
+
+  // Get product count by platform (with error handling for local dev)
+  let platformStats: any[] = []
+  try {
+    platformStats = await (prisma.product.groupBy as any)({
+      by: ['platform'],
+      _count: { id: true },
+      _sum: { clicks: true },
+    })
+  } catch (error) {
+    console.log('Platform stats not available (Prisma client may need regeneration)')
+    // Fallback: count all as SHOPEE
+    platformStats = [{ platform: 'SHOPEE', _count: { id: productCount }, _sum: { clicks: totalClicks._sum.clicks || 0 } }]
+  }
 
   const topProducts = await prisma.product.findMany({
     take: 5,
@@ -90,6 +97,12 @@ export default async function AdminDashboard() {
           className="p-4 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors text-center font-medium"
         >
           จัดการหมวดหมู่
+        </Link>
+        <Link
+          href="/admin/blog"
+          className="p-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-center font-medium"
+        >
+          จัดการบทความ
         </Link>
         <Link
           href="/admin/tools"

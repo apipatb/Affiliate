@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, X, SlidersHorizontal, Star, TrendingUp, Clock, DollarSign, Filter, Store } from 'lucide-react'
 import PriceRangeFilter from './PriceRangeFilter'
 import { PLATFORMS, type Platform } from '@/lib/platforms'
+import AdBanner from './AdBanner'
 
 interface Category {
   id: string
@@ -260,6 +261,11 @@ export default function ProductFilters({
           ล้างตัวกรอง
         </button>
       )}
+
+      {/* Sidebar Ad */}
+      <div className="mt-6">
+        <AdBanner slot="sidebar-1" format="rectangle" />
+      </div>
     </div>
   )
 
