@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
-import { Package, FolderOpen, MousePointerClick, TrendingUp, Star, Clock } from 'lucide-react'
+import { Package, FolderOpen, MousePointerClick, TrendingUp, Star, Clock, Store, Download } from 'lucide-react'
 import Link from 'next/link'
+import { PLATFORMS } from '@/lib/platforms'
 
 // Make dashboard dynamic to always show fresh data
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,8 @@ async function getStats() {
     totalClicks,
     featuredCount,
     recentProducts,
+    platformStats,
+    categoryStats,
   ] = await Promise.all([
     prisma.product.count(),
     prisma.category.count(),
@@ -24,6 +27,22 @@ async function getStats() {
       take: 5,
       orderBy: { createdAt: 'desc' },
       include: { category: true },
+    }),
+    // Get product count by platform
+    (prisma.product.groupBy as any)({
+      by: ['platform'],
+      _count: { id: true },
+      _sum: { clicks: true },
+    }),
+    // Get top categories by product count
+    prisma.category.findMany({
+      include: {
+        _count: { select: { products: true } },
+      },
+      orderBy: {
+        products: { _count: 'desc' },
+      },
+      take: 5,
     }),
   ])
 
@@ -40,6 +59,8 @@ async function getStats() {
     featuredCount,
     topProducts,
     recentProducts,
+    platformStats,
+    categoryStats,
   }
 }
 
@@ -129,6 +150,39 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
+      {/* Platform Stats */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 mb-8">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Store className="w-5 h-5 text-primary dark:text-blue-400" />
+              <h2 className="text-lg font-semibold text-black dark:text-slate-100">สินค้าตาม Platform</h2>
+            </div>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {Object.entries(PLATFORMS).map(([key, config]) => {
+              const stat = stats.platformStats.find((s: any) => s.platform === key)
+              const count = stat?._count?.id || 0
+              const clicks = stat?._sum?.clicks || 0
+              return (
+                <div
+                  key={key}
+                  className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-center"
+                  style={{ borderLeftColor: config.color, borderLeftWidth: '4px' }}
+                >
+                  <span className="text-2xl">{config.icon}</span>
+                  <p className="font-medium text-black dark:text-slate-100 mt-1">{config.name}</p>
+                  <p className="text-2xl font-bold text-black dark:text-slate-100">{count}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{clicks} clicks</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top Products */}
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -211,6 +265,85 @@ export default async function AdminDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Category Stats & Export */}
+      <div className="grid lg:grid-cols-2 gap-6 mt-6">
+        {/* Category Distribution */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-accent dark:text-yellow-400" />
+              <h2 className="text-lg font-semibold text-black dark:text-slate-100">หมวดหมู่ยอดนิยม</h2>
+            </div>
+          </div>
+          <div className="p-6">
+            {stats.categoryStats.length === 0 ? (
+              <p className="text-slate-600 dark:text-slate-400 text-center py-8">ยังไม่มีหมวดหมู่</p>
+            ) : (
+              <div className="space-y-3">
+                {stats.categoryStats.map((category: any, index: number) => {
+                  const percentage = stats.productCount > 0
+                    ? Math.round((category._count.products / stats.productCount) * 100)
+                    : 0
+                  return (
+                    <div key={category.id} className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-accent/10 dark:bg-yellow-400/20 text-accent dark:text-yellow-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm font-medium text-black dark:text-slate-100">{category.name}</span>
+                          <span className="text-sm text-slate-500 dark:text-slate-400">{category._count.products} สินค้า</span>
+                        </div>
+                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                          <div
+                            className="bg-accent dark:bg-yellow-400 h-2 rounded-full transition-all"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Export */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2">
+              <Download className="w-5 h-5 text-green-500" />
+              <h2 className="text-lg font-semibold text-black dark:text-slate-100">Export ข้อมูล</h2>
+            </div>
+          </div>
+          <div className="p-6 space-y-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              ส่งออกข้อมูลสินค้าทั้งหมดเป็นไฟล์ CSV สำหรับวิเคราะห์หรือสำรองข้อมูล
+            </p>
+            <div className="space-y-3">
+              <a
+                href="/api/products/export?format=csv"
+                className="flex items-center justify-center gap-2 w-full p-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Export เป็น CSV
+              </a>
+              <a
+                href="/api/products/export?format=json"
+                className="flex items-center justify-center gap-2 w-full p-3 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-black dark:text-slate-200 rounded-lg font-medium transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Export เป็น JSON
+              </a>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+              สินค้าทั้งหมด {stats.productCount} รายการ
+            </p>
           </div>
         </div>
       </div>

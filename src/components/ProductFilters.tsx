@@ -2,8 +2,9 @@
 
 import { useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Search, X, SlidersHorizontal, Star, TrendingUp, Clock, DollarSign, Filter } from 'lucide-react'
+import { Search, X, SlidersHorizontal, Star, TrendingUp, Clock, DollarSign, Filter, Store } from 'lucide-react'
 import PriceRangeFilter from './PriceRangeFilter'
+import { PLATFORMS, type Platform } from '@/lib/platforms'
 
 interface Category {
   id: string
@@ -32,6 +33,7 @@ export default function ProductFilters({
 
   const currentSort = searchParams.get('sort') || 'newest'
   const currentMinRating = searchParams.get('minRating') || ''
+  const currentPlatform = searchParams.get('platform') || ''
 
   const updateFilters = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -68,7 +70,7 @@ export default function ProductFilters({
     router.push('/products')
   }
 
-  const hasFilters = currentCategory || currentSearch || currentSort !== 'newest' || currentMinRating
+  const hasFilters = currentCategory || currentSearch || currentSort !== 'newest' || currentMinRating || currentPlatform
 
   const sortOptions = [
     { value: 'newest', label: 'ใหม่สุด', icon: Clock },
@@ -169,6 +171,41 @@ export default function ProductFilters({
         currentMinPrice={searchParams.get('minPrice') || ''}
         currentMaxPrice={searchParams.get('maxPrice') || ''}
       />
+
+      {/* Platform Filter */}
+      <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+        <h3 className="text-sm font-bold mb-3 text-slate-900 dark:text-white flex items-center gap-2">
+          <Store className="w-4 h-4 text-primary" />
+          Platform
+        </h3>
+        <div className="space-y-2">
+          <button
+            onClick={() => updateFilters('platform', null)}
+            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              !currentPlatform
+                ? 'bg-gradient-to-r from-primary to-blue-600 text-white shadow-md shadow-primary/30'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600'
+            }`}
+          >
+            ทุก Platform
+          </button>
+          {Object.entries(PLATFORMS).map(([key, config]) => (
+            <button
+              key={key}
+              onClick={() => updateFilters('platform', key)}
+              className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+                currentPlatform === key
+                  ? 'text-white shadow-md'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600'
+              }`}
+              style={currentPlatform === key ? { background: config.color } : {}}
+            >
+              <span>{config.icon}</span>
+              <span>{config.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Categories */}
       <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">

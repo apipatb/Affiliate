@@ -39,6 +39,7 @@ interface InfiniteScrollProductsProps {
   minRating?: string
   minPrice?: string
   maxPrice?: string
+  platform?: string
 }
 
 export default function InfiniteScrollProducts({
@@ -51,6 +52,7 @@ export default function InfiniteScrollProducts({
   minRating,
   minPrice,
   maxPrice,
+  platform,
 }: InfiniteScrollProductsProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [page, setPage] = useState(initialPage)
@@ -72,6 +74,7 @@ export default function InfiniteScrollProducts({
       if (minRating) params.append('minRating', minRating)
       if (minPrice) params.append('minPrice', minPrice)
       if (maxPrice) params.append('maxPrice', maxPrice)
+      if (platform) params.append('platform', platform)
 
       const response = await fetch(`/api/products?${params.toString()}`)
       const data = await response.json()
@@ -88,7 +91,7 @@ export default function InfiniteScrollProducts({
     } finally {
       setLoading(false)
     }
-  }, [page, loading, hasMore, category, search, sort, minRating, minPrice, maxPrice])
+  }, [page, loading, hasMore, category, search, sort, minRating, minPrice, maxPrice, platform])
 
   useEffect(() => {
     // Reset when filters change

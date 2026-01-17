@@ -5,6 +5,7 @@ import Pagination from '@/components/Pagination'
 import BackToTop from '@/components/BackToTop'
 import ComparisonFloatingButton from '@/components/ComparisonFloatingButton'
 import InfiniteScrollProducts from '@/components/InfiniteScrollProducts'
+import { PLATFORMS, type Platform } from '@/lib/platforms'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ interface PageProps {
     minRating?: string
     minPrice?: string
     maxPrice?: string
+    platform?: string
   }>
 }
 
@@ -37,7 +39,8 @@ async function getProducts(
   sort?: string,
   minRating?: string,
   minPrice?: string,
-  maxPrice?: string
+  maxPrice?: string,
+  platform?: string
 ) {
   const where: Record<string, unknown> = {}
 
@@ -54,6 +57,11 @@ async function getProducts(
 
   if (minRating) {
     where.rating = { gte: parseFloat(minRating) }
+  }
+
+  // Platform filter
+  if (platform) {
+    where.platform = platform
   }
 
   // Price range filter
@@ -134,7 +142,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       params.sort,
       params.minRating,
       params.minPrice,
-      params.maxPrice
+      params.maxPrice,
+      params.platform
     ),
     getCategories(),
   ])
@@ -185,6 +194,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
               <>
                 <p className="text-sm text-slate-700 dark:text-slate-300 mb-6">
                   พบ {total} สินค้า
+                  {params.platform && ` จาก ${PLATFORMS[params.platform as Platform]?.name || params.platform}`}
                   {params.category && ` ในหมวด ${params.category}`}
                   {params.search && ` ที่ตรงกับ "${params.search}"`}
                 </p>
@@ -198,6 +208,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                   minRating={params.minRating}
                   minPrice={params.minPrice}
                   maxPrice={params.maxPrice}
+                  platform={params.platform}
                 />
               </>
             )}

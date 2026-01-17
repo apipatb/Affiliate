@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   const minRating = searchParams.get('minRating')
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
+  const platform = searchParams.get('platform')
 
   // Pagination parameters
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -59,6 +60,11 @@ export async function GET(request: NextRequest) {
     if (maxPrice) {
       ;(where.price as any).lte = parseFloat(maxPrice)
     }
+  }
+
+  // Platform filter
+  if (platform) {
+    where.platform = platform
   }
 
   // Determine orderBy based on sort parameter
