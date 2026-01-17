@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, description, price, affiliateUrl, imageUrl, categoryId, featured, mediaType, media } = validation.data
+    const { title, description, price, affiliateUrl, imageUrl, categoryId, featured, mediaType, platform, media } = validation.data
 
     // Validate categoryId exists
     const categoryExists = await prisma.category.findUnique({ where: { id: categoryId } })
@@ -166,29 +166,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Create product with media gallery
+    const productData: any = {
+      title,
+      description,
+      price,
+      affiliateUrl,
+      imageUrl,
+      categoryId,
+      featured,
+      mediaType,
+      platform, // Platform field added to schema
+      // Create ProductMedia records if media array provided
+      ...(media && media.length > 0
+        ? {
+            media: {
+              create: media.map((item: any) => ({
+                url: item.url,
+                type: item.type || 'IMAGE',
+                order: item.order || 0,
+              })),
+            },
+          }
+        : {}),
+    }
+
     const product = await prisma.product.create({
-      data: {
-        title,
-        description,
-        price,
-        affiliateUrl,
-        imageUrl,
-        categoryId,
-        featured,
-        mediaType,
-        // Create ProductMedia records if media array provided
-        ...(media && media.length > 0
-          ? {
-              media: {
-                create: media.map((item: any) => ({
-                  url: item.url,
-                  type: item.type || 'IMAGE',
-                  order: item.order || 0,
-                })),
-              },
-            }
-          : {}),
-      },
+      data: productData,
       include: {
         category: true,
         media: {

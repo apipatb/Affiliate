@@ -92,24 +92,7 @@ async function getProducts(
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        price: true,
-        imageUrl: true,
-        mediaType: true,
-        clicks: true,
-        featured: true,
-        rating: true,
-        reviewCount: true,
-        originalPrice: true,
-        soldCount: true,
-        stock: true,
-        saleEndDate: true,
-        isBestSeller: true,
-        isLimited: true,
-        launchedAt: true,
+      include: {
         category: {
           select: {
             id: true,

@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { ExternalLink, Zap } from 'lucide-react'
+import { getPlatformConfig, type Platform } from '@/lib/platforms'
 
 interface StickyBuyButtonProps {
   productId: string
   productTitle: string
   price: number
   imageUrl: string
+  platform?: Platform | string
 }
 
-export default function StickyBuyButton({ productId, productTitle, price, imageUrl }: StickyBuyButtonProps) {
+export default function StickyBuyButton({ productId, productTitle, price, imageUrl, platform = 'SHOPEE' }: StickyBuyButtonProps) {
   const [isVisible, setIsVisible] = useState(false)
+  const platformConfig = getPlatformConfig(platform)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,7 +64,7 @@ export default function StickyBuyButton({ productId, productTitle, price, imageU
               className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-8 py-4 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95"
             >
               <Zap className="w-5 h-5 fill-white" />
-              <span className="hidden sm:inline">ซื้อที่ Shopee</span>
+              <span className="hidden sm:inline">ซื้อที่ {platformConfig.name}</span>
               <ExternalLink className="w-5 h-5 sm:hidden" />
             </button>
           </div>

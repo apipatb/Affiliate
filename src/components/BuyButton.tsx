@@ -1,15 +1,18 @@
 'use client'
 
-import { Zap, ArrowRight, ExternalLink } from 'lucide-react'
+import { Zap, ExternalLink } from 'lucide-react'
+import { getPlatformConfig, type Platform } from '@/lib/platforms'
 
 interface BuyButtonProps {
   productId: string
+  platform?: Platform | string
   affiliateUrl?: string // Keep for backwards compatibility but not used
 }
 
-export default function BuyButton({ productId }: BuyButtonProps) {
+export default function BuyButton({ productId, platform = 'SHOPEE' }: BuyButtonProps) {
   // Use redirect route that tracks clicks and redirects to affiliate URL
   const buyUrl = `/products/${productId}/go`
+  const platformConfig = getPlatformConfig(platform)
 
   const handleClick = () => {
     // Open the redirect route which will track and redirect
@@ -27,13 +30,13 @@ export default function BuyButton({ productId }: BuyButtonProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
 
         <Zap className="w-6 h-6 fill-white animate-pulse relative z-10" />
-        <span className="relative z-10">ซื้อเลยที่ Shopee</span>
+        <span className="relative z-10">ซื้อเลยที่ {platformConfig.name}</span>
         <ExternalLink className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
       </button>
 
       {/* Info text */}
       <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-        คลิกเพื่อไปยังหน้าสินค้าบน Shopee
+        คลิกเพื่อไปยังหน้าสินค้าบน {platformConfig.name}
       </p>
     </div>
   )

@@ -18,6 +18,7 @@ export const productSchema = z.object({
   categoryId: z.string().cuid('Invalid category ID'),
   featured: z.boolean().optional().default(false),
   mediaType: z.enum(['IMAGE', 'VIDEO']).optional().default('IMAGE'),
+  platform: z.enum(['SHOPEE', 'LAZADA', 'AMAZON', 'ALIEXPRESS', 'TIKTOK', 'OTHER']).optional().default('SHOPEE'),
   media: z.array(z.object({
     url: z.string().min(1, 'Media URL is required'),
     type: z.enum(['IMAGE', 'VIDEO']),

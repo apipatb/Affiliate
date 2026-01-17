@@ -19,13 +19,16 @@ import NewsletterPopup from '@/components/NewsletterPopup'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import CustomerReviews from '@/components/CustomerReviews'
 import ProductImageGallery from '@/components/ProductImageGallery'
+import PlatformBadge from '@/components/PlatformBadge'
 import type { Product, Category } from '@prisma/client'
+import type { Platform } from '@/lib/platforms'
 
 type MediaType = 'IMAGE' | 'VIDEO'
 
 type ProductWithCategory = Product & {
   category: Category
   mediaType: MediaType
+  platform?: Platform
   rating?: number
   reviewCount?: number
   originalPrice?: number | null
@@ -314,12 +317,15 @@ export default async function ProductPage({ params }: PageProps) {
 
           {/* Details */}
           <div className="lg:col-span-3">
-            <Link
-              href={`/products?category=${product.category.slug}`}
-              className="inline-block text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wider hover:underline mb-3 px-3 py-1 bg-primary/10 dark:bg-blue-500/10 rounded-full"
-            >
-              {product.category.name}
-            </Link>
+            <div className="flex items-center gap-2 mb-3">
+              <Link
+                href={`/products?category=${product.category.slug}`}
+                className="inline-block text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wider hover:underline px-3 py-1 bg-primary/10 dark:bg-blue-500/10 rounded-full"
+              >
+                {product.category.name}
+              </Link>
+              <PlatformBadge platform={product.platform || 'SHOPEE'} size="sm" />
+            </div>
 
             <div className="flex items-start justify-between gap-4 mb-4">
               <h1 className="text-2xl lg:text-3xl font-extrabold mt-2 text-slate-900 dark:text-white leading-tight flex-1">{product.title}</h1>
@@ -442,7 +448,7 @@ export default async function ProductPage({ params }: PageProps) {
                 สินค้าหมด - แจ้งเตือนเมื่อมีสต็อก
               </div>
             ) : (
-              <BuyButton productId={product.id} affiliateUrl={product.affiliateUrl} />
+              <BuyButton productId={product.id} platform={product.platform} affiliateUrl={product.affiliateUrl} />
             )}
 
             {/* Trust Badges */}
@@ -559,6 +565,7 @@ export default async function ProductPage({ params }: PageProps) {
         productTitle={product.title}
         price={product.price}
         imageUrl={product.imageUrl}
+        platform={product.platform}
       />
 
       {/* Floating Actions */}

@@ -58,7 +58,8 @@
       "mcp__ide__getDiagnostics",
       "Bash(echo:*)",
       "Bash(npx playwright install:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(chmod:*)"
     ]
   }
 }

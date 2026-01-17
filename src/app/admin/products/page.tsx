@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, ExternalLink, Star, Search, ChevronLeft, ChevronRight, CheckSquare, Square, Trash, Image, Video } from 'lucide-react'
+import { PLATFORMS, type Platform } from '@/lib/platforms'
 
 interface Category {
   id: string
@@ -24,6 +25,7 @@ interface Product {
   affiliateUrl: string
   imageUrl: string
   mediaType: 'IMAGE' | 'VIDEO'
+  platform: Platform
   categoryId: string
   category: Category
   clicks: number
@@ -47,6 +49,7 @@ export default function AdminProducts() {
     affiliateUrl: '',
     imageUrl: '',
     mediaType: 'IMAGE' as 'IMAGE' | 'VIDEO',
+    platform: 'SHOPEE' as Platform,
     categoryId: '',
     featured: false,
   })
@@ -286,6 +289,7 @@ export default function AdminProducts() {
         affiliateUrl: product.affiliateUrl,
         imageUrl: product.imageUrl,
         mediaType: product.mediaType,
+        platform: product.platform || 'SHOPEE',
         categoryId: product.categoryId,
         featured: product.featured,
       })
@@ -300,6 +304,7 @@ export default function AdminProducts() {
         affiliateUrl: '',
         imageUrl: '',
         mediaType: 'IMAGE',
+        platform: 'SHOPEE',
         categoryId: categories[0]?.id || '',
         featured: false,
       })
@@ -318,6 +323,7 @@ export default function AdminProducts() {
       affiliateUrl: '',
       imageUrl: '',
       mediaType: 'IMAGE',
+      platform: 'SHOPEE',
       categoryId: '',
       featured: false,
     })
@@ -928,6 +934,21 @@ export default function AdminProducts() {
                     ))}
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Platform</label>
+                <select
+                  value={formData.platform}
+                  onChange={(e) => setFormData({ ...formData, platform: e.target.value as Platform })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-slate-900 dark:text-white font-medium transition-all"
+                  required
+                >
+                  {Object.entries(PLATFORMS).map(([key, config]) => (
+                    <option key={key} value={key}>
+                      {config.icon} {config.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               {/* Media Gallery Upload Section */}
               <div className="col-span-2">

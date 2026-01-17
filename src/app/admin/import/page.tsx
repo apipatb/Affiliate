@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { PLATFORMS, detectPlatformFromUrl, type Platform } from '@/lib/platforms'
 
 interface Category {
   id: string
@@ -17,9 +18,10 @@ export default function ImportPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('SHOPEE')
 
   // Manual input fields
-  const [manualMode, setManualMode] = useState(false)
+  const [manualMode, setManualMode] = useState(true) // Default to manual mode
   const [manualData, setManualData] = useState({
     title: '',
     description: '',
@@ -27,6 +29,14 @@ export default function ImportPage() {
     imageUrl: '',
     commissionRate: '',
   })
+
+  // Auto-detect platform from URL
+  useEffect(() => {
+    if (url) {
+      const detected = detectPlatformFromUrl(url)
+      setSelectedPlatform(detected)
+    }
+  }, [url])
 
   useEffect(() => {
     fetchCategories()
@@ -64,7 +74,11 @@ export default function ImportPage() {
           imageUrl: manualData.imageUrl,
           categoryId,
           featured,
+          platform: selectedPlatform,
         }
+      } else {
+        // Auto mode - include platform
+        body.platform = selectedPlatform
       }
 
       const res = await fetch(endpoint, {
@@ -77,10 +91,12 @@ export default function ImportPage() {
 
       if (res.ok) {
         const productTitle = manualMode ? manualData.title : data.product.title
-        setMessage({ type: 'success', text: `สินค้า "${productTitle}" ถูก import สำเร็จ!` })
+        const platformName = PLATFORMS[selectedPlatform].name
+        setMessage({ type: 'success', text: `สินค้า "${productTitle}" (${platformName}) ถูก import สำเร็จ!` })
         setUrl('')
         setCategoryId('')
         setFeatured(false)
+        setSelectedPlatform('SHOPEE')
         setManualData({
           title: '',
           description: '',
@@ -104,9 +120,9 @@ export default function ImportPage() {
   return (
     <div className="py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-black dark:text-slate-100">Import สินค้าจาก Shopee</h1>
+        <h1 className="text-3xl font-bold text-black dark:text-slate-100">Import สินค้า</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-2">
-          วาง URL สินค้าจาก Shopee เพื่อ import ข้อมูลเข้าสู่ระบบอัตโนมัติ
+          วาง URL สินค้าจาก Shopee, Lazada, Amazon หรือ platform อื่น ๆ เพื่อ import เข้าสู่ระบบ
         </p>
       </div>
 
@@ -140,21 +156,42 @@ export default function ImportPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2 text-black dark:text-slate-200">
-              {manualMode ? 'Shopee Affiliate Link' : 'Shopee URL'} <span className="text-red-500">*</span>
+              {manualMode ? 'Affiliate Link' : 'URL สินค้า'} <span className="text-red-500">*</span>
             </label>
             <input
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder={manualMode ? "https://shope.ee/xxxxx (จากหน้า Shopee Affiliate)" : "https://shopee.co.th/product-name-i.123456.789012"}
+              placeholder={manualMode ? "https://shope.ee/xxxxx หรือ https://s.lazada.co.th/xxxxx" : "https://shopee.co.th/... หรือ https://lazada.co.th/..."}
               className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-black dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {manualMode
-                ? 'วาง Affiliate Link ที่คัดลอกจากหน้า Shopee Affiliate (https://affiliate.shopee.co.th)'
+                ? 'วาง Affiliate Link ที่คัดลอกจากหน้า Affiliate Dashboard'
                 : 'ตัวอย่าง: https://shopee.co.th/product-name-i.123456.789012'
               }
+            </p>
+          </div>
+
+          {/* Platform Selector */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-black dark:text-slate-200">
+              Platform <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedPlatform}
+              onChange={(e) => setSelectedPlatform(e.target.value as Platform)}
+              className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-black dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              {Object.entries(PLATFORMS).map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.icon} {config.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              ระบบจะตรวจจับ platform อัตโนมัติจาก URL หรือสามารถเลือกเองได้
             </p>
           </div>
 
@@ -303,33 +340,47 @@ export default function ImportPage() {
       <div className="mt-8 space-y-4 max-w-2xl">
         {/* Auto Mode Instructions */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h3 className="font-medium text-blue-900 dark:text-blue-300 mb-2">💡 โหมดอัตโนมัติ (ดึงจาก Shopee)</h3>
+          <h3 className="font-medium text-blue-900 dark:text-blue-300 mb-2">💡 โหมดอัตโนมัติ</h3>
           <ol className="text-sm text-blue-800 dark:text-blue-400 space-y-1 list-decimal list-inside">
-            <li>เปิดสินค้าจาก Shopee ที่ต้องการ import</li>
+            <li>เปิดสินค้าจาก Shopee, Lazada หรือ platform อื่นที่ต้องการ import</li>
             <li>คัดลอก URL จากแถบที่อยู่ของเบราว์เซอร์</li>
-            <li>วาง URL ลงในช่องด้านบน</li>
-            <li>เลือกหมวดหมู่</li>
-            <li>คลิก "Import สินค้า" - ระบบจะดึงข้อมูลอัตโนมัติ</li>
+            <li>วาง URL - ระบบจะตรวจจับ platform อัตโนมัติ</li>
+            <li>เลือกหมวดหมู่และคลิก "Import สินค้า"</li>
           </ol>
+          <p className="text-xs text-blue-600 dark:text-blue-500 mt-2">
+            * ปัจจุบันรองรับการดึงข้อมูลอัตโนมัติจาก Shopee เท่านั้น
+          </p>
         </div>
 
         {/* Manual Mode Instructions */}
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-          <h3 className="font-medium text-green-900 dark:text-green-300 mb-2">✨ โหมดกรอกข้อมูลเอง (Affiliate Link)</h3>
+          <h3 className="font-medium text-green-900 dark:text-green-300 mb-2">✨ โหมดกรอกข้อมูลเอง (แนะนำ)</h3>
           <p className="text-sm text-green-800 dark:text-green-400 mb-2">
-            <strong>ใช้เมื่อ:</strong> ต้องการใช้ Affiliate Link จาก Shopee Affiliate Dashboard
+            <strong>ใช้เมื่อ:</strong> ต้องการใช้ Affiliate Link จาก platform ต่าง ๆ
           </p>
           <ol className="text-sm text-green-800 dark:text-green-400 space-y-1 list-decimal list-inside">
-            <li>เข้า <a href="https://affiliate.shopee.co.th/offer/product_offer" target="_blank" className="underline hover:text-green-600">Shopee Affiliate</a> และค้นหาสินค้า</li>
-            <li>คลิก "รับลิงก์" หรือ "สร้างลิงก์" และคัดลอก Affiliate Link</li>
-            <li>เปลี่ยนเป็นโหมด "กรอกข้อมูลเอง"</li>
-            <li>วาง Affiliate Link และกรอกข้อมูลสินค้า (ชื่อ, ราคา, รูปภาพ)</li>
-            <li>สามารถบันทึกอัตราคอมมิชชั่นไว้อ้างอิงได้ (ไม่บังคับ)</li>
+            <li>เข้า Affiliate Dashboard ของ platform ที่ต้องการ (Shopee, Lazada, Amazon)</li>
+            <li>ค้นหาสินค้าและสร้าง Affiliate Link</li>
+            <li>วาง Link และกรอกข้อมูลสินค้า (ชื่อ, ราคา, รูปภาพ)</li>
+            <li>เลือก Platform ให้ถูกต้อง (ระบบจะตรวจจับอัตโนมัติ)</li>
           </ol>
           <div className="mt-3 p-3 bg-white dark:bg-green-950/30 rounded border border-green-300 dark:border-green-700">
             <p className="text-xs text-green-700 dark:text-green-400">
-              <strong>💰 ข้อดี:</strong> ใช้ Affiliate Link ที่ได้รับคอมมิชชั่นโดยตรง ไม่ต้องรอ Shopee API
+              <strong>💰 ข้อดี:</strong> รองรับทุก platform และใช้ Affiliate Link ที่ได้รับคอมมิชชั่นโดยตรง
             </p>
+          </div>
+        </div>
+
+        {/* Supported Platforms */}
+        <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+          <h3 className="font-medium text-slate-900 dark:text-slate-300 mb-3">Platform ที่รองรับ</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {Object.entries(PLATFORMS).map(([key, config]) => (
+              <div key={key} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-400">
+                <span>{config.icon}</span>
+                <span>{config.name}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

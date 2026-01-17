@@ -24,12 +24,13 @@ model Product {
   affiliateUrl String
   imageUrl     String    // Primary/thumbnail image (backward compatible)
   mediaType    MediaType @default(IMAGE)
+  platform     Platform  @default(SHOPEE) // Source platform
   category     Category  @relation(fields: [categoryId], references: [id])
   categoryId   String
   clicks       Int       @default(0)
   featured     Boolean   @default(false)
-  rating       Float     @default(4.8) // Average rating from Shopee (0-5)
-  reviewCount  Int       @default(0)   // Number of reviews from Shopee
+  rating       Float     @default(4.8) // Average rating (0-5)
+  reviewCount  Int       @default(0)   // Number of reviews
   originalPrice Float?                 // Original price for comparison
   soldCount    Int       @default(0)   // Number of items sold
   stock        Int?                    // Stock quantity (null = unlimited)
@@ -48,6 +49,7 @@ model Product {
   @@index([clicks])
   @@index([rating])
   @@index([price])
+  @@index([platform])
   @@index([featured, createdAt])
   @@index([categoryId, rating])
   @@index([categoryId, clicks])
@@ -57,6 +59,15 @@ model Product {
 enum MediaType {
   IMAGE
   VIDEO
+}
+
+enum Platform {
+  SHOPEE
+  LAZADA
+  AMAZON
+  ALIEXPRESS
+  TIKTOK
+  OTHER
 }
 
 model Category {

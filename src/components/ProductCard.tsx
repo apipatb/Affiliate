@@ -8,13 +8,16 @@ import WishlistButton from './WishlistButton'
 import ComparisonButton from './ComparisonButton'
 import QuickViewModal from './QuickViewModal'
 import VideoPlayerModal from './VideoPlayerModal'
+import PlatformBadge from './PlatformBadge'
 import type { Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
+import { getPlatformConfig, type Platform } from '@/lib/platforms'
 
 type MediaType = 'IMAGE' | 'VIDEO'
 
 type Product = PrismaProduct & {
   category: PrismaCategory
   mediaType: MediaType
+  platform?: Platform
   rating?: number
   reviewCount?: number
   originalPrice?: number | null
@@ -150,6 +153,11 @@ export default function ProductCard({ product }: { product: Product }) {
               {product.clicks > 1000 ? `${(product.clicks / 1000).toFixed(1)}K` : product.clicks}
             </div>
           ) : null}
+
+          {/* Platform Badge - Bottom Right */}
+          <div className="absolute bottom-3 right-3 z-10">
+            <PlatformBadge platform={product.platform || 'SHOPEE'} size="sm" />
+          </div>
 
           {/* Quick View Button - Appears on hover (behind wishlist) */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
