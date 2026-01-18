@@ -132,7 +132,6 @@ export default async function ProductPage({ params }: PageProps) {
         productTitle={product.title}
         price={product.price}
         imageUrl={product.imageUrl}
-        categoryName={product.category.name}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -557,7 +556,9 @@ export default async function ProductPage({ params }: PageProps) {
       </div>
 
       {/* Recently Viewed Products */}
-      <RecentlyViewed />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        <RecentlyViewed excludeId={product.id} />
+      </div>
 
       {/* Sticky Buy Button */}
       <StickyBuyButton

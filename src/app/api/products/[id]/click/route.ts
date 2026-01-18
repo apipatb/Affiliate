@@ -7,11 +7,28 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
 
+    // Update click count and get product info
     const product = await prisma.product.update({
       where: { id },
       data: {
         clicks: { increment: 1 },
       },
+      select: {
+        affiliateUrl: true,
+        clicks: true,
+        platform: true,
+      }
+    })
+
+    // Log the click for analytics (don't wait for it)
+    ;(prisma as any).clickLog?.create({
+      data: {
+        productId: id,
+        platform: product.platform,
+      }
+    }).catch((err: any) => {
+      // Silent fail for click logging - don't block the redirect
+      console.error('Failed to log click:', err)
     })
 
     return NextResponse.json({

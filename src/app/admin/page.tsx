@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Package, FolderOpen, MousePointerClick, TrendingUp, Star, Clock, Store, Download } from 'lucide-react'
+import { Package, FolderOpen, MousePointerClick, TrendingUp, Star, Clock, Store, Download, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
 import { PLATFORMS } from '@/lib/platforms'
 
@@ -109,6 +109,13 @@ export default async function AdminDashboard() {
           className="p-4 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-center font-medium"
         >
           เครื่องมือ
+        </Link>
+        <Link
+          href="/admin/analytics"
+          className="p-4 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors text-center font-medium flex items-center justify-center gap-2"
+        >
+          <BarChart3 className="w-5 h-5" />
+          Analytics
         </Link>
       </div>
 

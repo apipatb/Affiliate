@@ -87,23 +87,27 @@ export async function GET(request: NextRequest) {
       orderBy = { createdAt: 'desc' }
   }
 
-  // Get total count for pagination metadata
-  const total = await prisma.product.count({ where })
-
-  const products = await prisma.product.findMany({
-    where,
-    include: {
-      category: true,
-      media: {
-        orderBy: { order: 'asc' },
+  // Run count and findMany in parallel for better performance
+  const [total, products] = await Promise.all([
+    prisma.product.count({ where }),
+    prisma.product.findMany({
+      where,
+      include: {
+        category: {
+          select: { id: true, name: true, slug: true }
+        },
+        media: {
+          orderBy: { order: 'asc' },
+          take: 5, // Limit media to first 5 for list view
+        },
       },
-    },
-    orderBy,
-    skip,
-    take: limit,
-  })
+      orderBy,
+      skip,
+      take: limit,
+    })
+  ])
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     data: products,
     products, // Also return products for infinite scroll compatibility
     pagination: {
@@ -117,6 +121,11 @@ export async function GET(request: NextRequest) {
     totalPages: Math.ceil(total / limit), // For infinite scroll compatibility
     currentPage: page, // For infinite scroll compatibility
   })
+
+  // Add cache headers for better performance
+  response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300')
+
+  return response
 }
 
 export async function POST(request: NextRequest) {

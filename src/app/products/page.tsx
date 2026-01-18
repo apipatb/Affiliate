@@ -5,6 +5,7 @@ import Pagination from '@/components/Pagination'
 import BackToTop from '@/components/BackToTop'
 import ComparisonFloatingButton from '@/components/ComparisonFloatingButton'
 import InfiniteScrollProducts from '@/components/InfiniteScrollProducts'
+import RecentlyViewed from '@/components/RecentlyViewed'
 import { PLATFORMS, type Platform } from '@/lib/platforms'
 import { Metadata } from 'next'
 
@@ -213,6 +214,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
               </>
             )}
           </div>
+        </div>
+
+        {/* Recently Viewed */}
+        <div className="mt-12">
+          <RecentlyViewed maxItems={6} />
         </div>
       </div>
       <BackToTop />

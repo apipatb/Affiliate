@@ -8,7 +8,6 @@ interface TrackProductViewProps {
   productTitle: string
   price: number
   imageUrl: string
-  categoryName: string
 }
 
 export default function TrackProductView({
@@ -16,7 +15,6 @@ export default function TrackProductView({
   productTitle,
   price,
   imageUrl,
-  categoryName,
 }: TrackProductViewProps) {
   const { addProduct } = useRecentlyViewed()
 
@@ -28,12 +26,11 @@ export default function TrackProductView({
         title: productTitle,
         price,
         imageUrl,
-        categoryName,
       })
     }, 1000) // Wait 1 second to ensure user is actually viewing the product
 
     return () => clearTimeout(timer)
-  }, [productId, productTitle, price, imageUrl, categoryName, addProduct])
+  }, [productId, productTitle, price, imageUrl, addProduct])
 
   return null // This component doesn't render anything
 }

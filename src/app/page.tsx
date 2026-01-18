@@ -2,6 +2,7 @@ import { ArrowRight, Star, ShieldCheck, Zap, ShoppingBag } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import ProductCarousel from "@/components/ProductCarousel"
+import RecentlyViewed from "@/components/RecentlyViewed"
 
 async function getFeaturedProducts() {
   return prisma.product.findMany({
@@ -106,6 +107,13 @@ export default async function Home() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Recently Viewed Products */}
+      <section className="py-12 bg-slate-50 dark:bg-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <RecentlyViewed maxItems={6} />
         </div>
       </section>
     </div>

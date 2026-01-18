@@ -40,6 +40,7 @@ model Product {
   launchedAt   DateTime?               // Product launch date (for "New" badge)
   media        ProductMedia[]          // Product gallery (multiple images/videos)
   reviews      Review[]                // User reviews with photos/videos
+  clickLogs    ClickLog[]              // Click history for analytics
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -153,4 +154,18 @@ model BlogPost {
   @@index([featured])
   @@index([createdAt])
   @@index([publishedAt])
+}
+
+// Click tracking for analytics
+model ClickLog {
+  id        String   @id @default(cuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  platform  Platform @default(SHOPEE)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+  @@index([platform])
+  @@index([createdAt, platform])
 }

@@ -14,7 +14,12 @@ export async function GET() {
     orderBy: { name: 'asc' },
   })
 
-  return NextResponse.json(categories)
+  const response = NextResponse.json(categories)
+
+  // Cache for 5 minutes (categories don't change often)
+  response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+
+  return response
 }
 
 export async function POST(request: NextRequest) {
