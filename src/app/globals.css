@@ -48,6 +48,15 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 @layer components {
   .glass {
     @apply bg-white/90 backdrop-blur-md border border-slate-200 shadow-lg;

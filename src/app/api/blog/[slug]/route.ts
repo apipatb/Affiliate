@@ -10,7 +10,7 @@ export async function GET(
 ) {
   const { slug } = await params
 
-  const post = await (prisma as any).blogPost.findUnique({
+  const post = await prisma.blogPost.findUnique({
     where: { slug },
   })
 
@@ -19,7 +19,7 @@ export async function GET(
   }
 
   // Increment view count
-  await (prisma as any).blogPost.update({
+  await prisma.blogPost.update({
     where: { slug },
     data: { views: { increment: 1 } },
   })
@@ -43,7 +43,7 @@ export async function PUT(
     const body = await request.json()
     const { title, excerpt, content, coverImage, published, featured, tags, metaTitle, metaDesc } = body
 
-    const existingPost = await (prisma as any).blogPost.findUnique({
+    const existingPost = await prisma.blogPost.findUnique({
       where: { slug },
     })
 
@@ -51,7 +51,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    const post = await (prisma as any).blogPost.update({
+    const post = await prisma.blogPost.update({
       where: { slug },
       data: {
         title,
@@ -93,7 +93,7 @@ export async function DELETE(
   const { slug } = await params
 
   try {
-    await (prisma as any).blogPost.delete({
+    await prisma.blogPost.delete({
       where: { slug },
     })
 

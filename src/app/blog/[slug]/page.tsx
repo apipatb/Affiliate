@@ -12,7 +12,7 @@ interface PageProps {
 
 async function getBlogPost(slug: string) {
   try {
-    const post = await (prisma as any).blogPost.findUnique({
+    const post = await prisma.blogPost.findUnique({
       where: { slug, published: true },
     })
     return post
@@ -24,7 +24,7 @@ async function getBlogPost(slug: string) {
 async function getRelatedPosts(tags: string[], currentSlug: string) {
   try {
     if (!tags || tags.length === 0) return []
-    const posts = await (prisma as any).blogPost.findMany({
+    const posts = await prisma.blogPost.findMany({
       where: {
         published: true,
         slug: { not: currentSlug },
@@ -68,7 +68,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   // Increment view count
   try {
-    await (prisma as any).blogPost.update({
+    await prisma.blogPost.update({
       where: { slug },
       data: { views: { increment: 1 } },
     })

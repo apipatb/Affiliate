@@ -169,3 +169,109 @@ model ClickLog {
   @@index([platform])
   @@index([createdAt, platform])
 }
+
+// ============================================
+// TikTok Auto Sales Bot
+// ============================================
+
+enum TikTokJobStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+enum TikTokPublishType {
+  DIRECT_POST    // Publish directly to TikTok
+  INBOX_DRAFT    // Send to user's draft/inbox
+}
+
+// Connected TikTok accounts for OAuth
+model TikTokAccount {
+  id              String    @id @default(cuid())
+  userId          String    @unique // Internal user ID
+  accessToken     String    @db.Text
+  refreshToken    String    @db.Text
+  tokenExpiresAt  DateTime
+  tokenScope      String?   // OAuth scopes granted
+  tiktokUserId    String    @unique // TikTok's user ID (open_id)
+  tiktokUsername  String?   // TikTok @username
+  displayName     String?   // TikTok display name
+  avatarUrl       String?   // Profile picture URL
+  isActive        Boolean   @default(true)
+  dailyPostCount  Int       @default(0) // Track posts per day
+  dailyPostResetAt DateTime? // When to reset daily count
+  lastPostAt      DateTime? // Last successful post time
+  jobs            TikTokJob[] // Jobs posted with this account
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([isActive])
+  @@index([tiktokUserId])
+}
+
+// TikTok video job for auto-posting
+model TikTokJob {
+  id               String          @id @default(cuid())
+  productId        String          // Platform product ID (SHOPEE-xxx, LAZADA-xxx, TIKTOK-xxx)
+  internalProductId String?        // Link to internal Product (Prisma CUID) - for navigation
+  affiliateUrl     String?         // Affiliate URL to the product
+  productName      String?         // Product name for display
+  productImage     String?         // Main product thumbnail
+  productImages    String[]        // Multiple images for slideshow video
+
+  // Hook content for video
+  hook1        String?         @db.Text // Opening hook
+  hook2        String?         @db.Text // Middle hook
+  hook3        String?         @db.Text // Closing hook
+  ending       String?         @db.Text // Call to action / ending
+
+  // Video info
+  videoUrl     String?         // Generated video URL
+  caption      String?         @db.Text // Video caption/description
+  hashtags     String[]        // Hashtags for video
+
+  // Status tracking
+  status       TikTokJobStatus @default(PENDING)
+  error        String?         // Error message if failed
+  retryCount   Int             @default(0)
+  scheduledAt  DateTime?       // When to auto-post (null = manual)
+  postedAt     DateTime?       // When video was posted
+
+  // TikTok posting info
+  tiktokAccountId  String?       // Account used for posting
+  tiktokAccount    TikTokAccount? @relation(fields: [tiktokAccountId], references: [id])
+  tiktokPostId     String?       // TikTok's post ID after successful upload
+  publishType      TikTokPublishType @default(DIRECT_POST)
+
+  // Progress tracking for video generation
+  progress     Int             @default(0) // 0-100 percentage
+  progressStep String?         // Current step description
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([status])
+  @@index([productId])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([tiktokAccountId])
+  @@index([scheduledAt])
+}
+
+// Hook templates for AI generation
+model TikTokHookTemplate {
+  id          String   @id @default(cuid())
+  name        String   // Template name
+  category    String?  // Product category this template is for
+  hookType    String   // "opening", "middle", "closing", "ending"
+  template    String   @db.Text // Template text with placeholders
+  isActive    Boolean  @default(true)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([hookType])
+  @@index([category])
+  @@index([isActive])
+}

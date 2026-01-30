@@ -4,6 +4,7 @@ import { productSchema, validateData } from '@/lib/validations'
 import { rateLimit, getClientIdentifier, RateLimitPresets } from '@/lib/rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { createJobFromProduct } from '@/lib/tiktok-auto-pipeline'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -222,6 +223,20 @@ export async function POST(request: NextRequest) {
       revalidatePath('/featured')
     }
     revalidatePath('/categories')
+
+    // Auto-create TikTok job if enabled (non-blocking)
+    const autoTikTok = body.autoTikTok !== false // Default true
+    if (autoTikTok) {
+      createJobFromProduct(product.id, { runPipeline: false })
+        .then(result => {
+          if (result.success) {
+            console.log(`[Auto TikTok] Job created for product ${product.id}: ${result.jobId}`)
+          }
+        })
+        .catch(err => {
+          console.error(`[Auto TikTok] Failed to create job for product ${product.id}:`, err)
+        })
+    }
 
     return NextResponse.json(product, { status: 201 })
   } catch (error) {

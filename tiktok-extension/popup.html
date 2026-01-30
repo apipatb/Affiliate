@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikTok Auto Sales</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Affiliate Video Bot</h1>
+      <p class="subtitle">จับรูปสินค้า + สร้าง Video อัตโนมัติ</p>
+    </div>
+
+    <!-- Settings -->
+    <div class="section">
+      <label class="label">API URL</label>
+      <input type="text" id="apiUrl" class="input" placeholder="http://localhost:3000">
+      <button id="saveSettings" class="btn btn-secondary">บันทึก</button>
+    </div>
+
+    <!-- Status -->
+    <div class="section">
+      <div class="status-card">
+        <div class="status-item">
+          <span class="status-label">สถานะ</span>
+          <span id="connectionStatus" class="status-badge disconnected">ไม่เชื่อมต่อ</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">งานรอดำเนินการ</span>
+          <span id="pendingCount" class="status-value">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="section">
+      <button id="fetchJobs" class="btn btn-primary">
+        <span class="btn-icon">🔄</span>
+        ดึงงานใหม่
+      </button>
+      <button id="testConnection" class="btn btn-secondary">
+        <span class="btn-icon">🔗</span>
+        ทดสอบการเชื่อมต่อ
+      </button>
+    </div>
+
+    <!-- Platform Captured Data -->
+    <div class="section" id="shopeeDataSection" style="display: none;">
+      <h3 class="shopee-header">
+        <span class="shopee-icon">🛒</span>
+        รูปสินค้าที่จับมา
+      </h3>
+      <div class="shopee-card">
+        <div class="shopee-images" id="shopeeImages">
+          <!-- Images will be populated here -->
+        </div>
+        <div class="shopee-info">
+          <p id="shopeeProductName" class="shopee-name">-</p>
+          <p id="shopeePrice" class="shopee-price">-</p>
+        </div>
+        <div class="shopee-actions">
+          <button id="createJobFromShopee" class="btn btn-shopee">
+            <span class="btn-icon">➕</span>
+            สร้าง Job จากรูปนี้
+          </button>
+          <button id="clearShopeeData" class="btn btn-secondary btn-small">
+            <span class="btn-icon">🗑️</span>
+            ล้าง
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Job -->
+    <div class="section" id="currentJobSection" style="display: none;">
+      <h3>งานปัจจุบัน</h3>
+      <div class="job-card">
+        <div class="job-image">
+          <img id="jobImage" src="" alt="Product">
+        </div>
+        <div class="job-info">
+          <p id="jobName" class="job-name">-</p>
+          <p id="jobId" class="job-id">ID: -</p>
+        </div>
+      </div>
+      <div class="hooks-preview">
+        <div class="hook-item">
+          <label>Hook 1:</label>
+          <p id="hook1">-</p>
+        </div>
+        <div class="hook-item">
+          <label>Hook 2:</label>
+          <p id="hook2">-</p>
+        </div>
+        <div class="hook-item">
+          <label>Hook 3:</label>
+          <p id="hook3">-</p>
+        </div>
+        <div class="hook-item">
+          <label>Ending:</label>
+          <p id="ending">-</p>
+        </div>
+        <div class="hook-item">
+          <label>Caption:</label>
+          <p id="caption">-</p>
+        </div>
+        <div class="hook-item">
+          <label>Hashtags:</label>
+          <p id="hashtags" class="hashtags-display">-</p>
+        </div>
+      </div>
+      <div class="job-actions">
+        <button id="copyHooks" class="btn btn-secondary">
+          <span class="btn-icon">📋</span>
+          คัดลอก Hooks
+        </button>
+        <button id="markDone" class="btn btn-success">
+          <span class="btn-icon">✅</span>
+          เสร็จสิ้น
+        </button>
+        <button id="skipJob" class="btn btn-warning">
+          <span class="btn-icon">⏭️</span>
+          ข้าม
+        </button>
+      </div>
+    </div>
+
+    <!-- Jobs List -->
+    <div class="section">
+      <h3>รายการงาน <span id="jobsCount">(0)</span></h3>
+      <div id="jobsList" class="jobs-list">
+        <p class="empty-state">ยังไม่มีงาน</p>
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts -->
+    <div class="section shortcuts-section">
+      <h3>⌨️ Keyboard Shortcuts</h3>
+      <div class="shortcuts-list">
+        <div class="shortcut-item">
+          <kbd>Alt</kbd> + <kbd>T</kbd>
+          <span>เปิด/ปิด Panel</span>
+        </div>
+        <div class="shortcut-item">
+          <kbd>Alt</kbd> + <kbd>C</kbd>
+          <span>คัดลอก Hooks</span>
+        </div>
+        <div class="shortcut-item">
+          <kbd>Alt</kbd> + <kbd>D</kbd>
+          <span>เสร็จสิ้น</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a href="#" id="openDashboard">เปิด Dashboard</a>
+      <span class="version">v2.0.0</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

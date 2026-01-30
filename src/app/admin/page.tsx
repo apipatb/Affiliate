@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { Package, FolderOpen, MousePointerClick, TrendingUp, Star, Clock, Store, Download, BarChart3 } from 'lucide-react'
+import { Package, FolderOpen, MousePointerClick, TrendingUp, Star, Clock, Store, Download, BarChart3, Video } from 'lucide-react'
 import Link from 'next/link'
 import { PLATFORMS } from '@/lib/platforms'
 
@@ -116,6 +116,13 @@ export default async function AdminDashboard() {
         >
           <BarChart3 className="w-5 h-5" />
           Analytics
+        </Link>
+        <Link
+          href="/admin/tiktok"
+          className="p-4 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors text-center font-medium flex items-center justify-center gap-2"
+        >
+          <Video className="w-5 h-5" />
+          TikTok Bot
         </Link>
       </div>
 

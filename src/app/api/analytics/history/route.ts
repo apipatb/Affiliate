@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Try to get click logs
     let clickLogs: any[] = []
     try {
-      clickLogs = await (prisma as any).clickLog.findMany({
+      clickLogs = await prisma.clickLog.findMany({
         where: {
           createdAt: { gte: startDate }
         },

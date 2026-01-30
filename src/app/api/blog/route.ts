@@ -31,13 +31,13 @@ export async function GET(request: NextRequest) {
   }
 
   const [posts, total] = await Promise.all([
-    (prisma as any).blogPost.findMany({
+    prisma.blogPost.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
     }),
-    (prisma as any).blogPost.count({ where }),
+    prisma.blogPost.count({ where }),
   ])
 
   return NextResponse.json({
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       .replace(/-+/g, '-')
       .trim() + '-' + Date.now().toString(36)
 
-    const post = await (prisma as any).blogPost.create({
+    const post = await prisma.blogPost.create({
       data: {
         title,
         slug,

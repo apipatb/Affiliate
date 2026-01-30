@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "Affiliate Video Bot",
+  "version": "2.0.0",
+  "description": "จับรูปสินค้าจาก Shopee, Lazada, TikTok Shop, Amazon และสร้าง Video อัตโนมัติ",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.tiktok.com/*",
+    "https://seller.tiktok.com/*",
+    "https://shop.tiktok.com/*",
+    "https://shopee.co.th/*",
+    "https://*.shopee.co.th/*",
+    "https://www.lazada.co.th/*",
+    "https://*.lazada.co.th/*",
+    "https://www.amazon.com/*",
+    "https://*.amazon.com/*",
+    "http://localhost:3000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.tiktok.com/*", "https://seller.tiktok.com/*", "https://shop.tiktok.com/*"],
+      "js": ["content.js"],
+      "css": ["content-styles.css"]
+    },
+    {
+      "matches": ["https://shopee.co.th/*"],
+      "js": ["platform-content.js"],
+      "css": ["content-styles.css"]
+    },
+    {
+      "matches": ["https://www.lazada.co.th/*", "https://*.lazada.co.th/*"],
+      "js": ["platform-content.js"],
+      "css": ["content-styles.css"]
+    },
+    {
+      "matches": ["https://www.amazon.com/*", "https://*.amazon.com/*"],
+      "js": ["platform-content.js"],
+      "css": ["content-styles.css"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

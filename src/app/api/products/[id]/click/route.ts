@@ -21,7 +21,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     })
 
     // Log the click for analytics (don't wait for it)
-    ;(prisma as any).clickLog?.create({
+    ;prisma.clickLog?.create({
       data: {
         productId: id,
         platform: product.platform,

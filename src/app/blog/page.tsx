@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 
 async function getBlogPosts() {
   try {
-    const posts = await (prisma as any).blogPost.findMany({
+    const posts = await prisma.blogPost.findMany({
       where: { published: true },
       orderBy: { publishedAt: 'desc' },
       take: 20,
@@ -28,7 +28,7 @@ async function getBlogPosts() {
 
 async function getFeaturedPosts() {
   try {
-    const posts = await (prisma as any).blogPost.findMany({
+    const posts = await prisma.blogPost.findMany({
       where: { published: true, featured: true },
       orderBy: { publishedAt: 'desc' },
       take: 3,

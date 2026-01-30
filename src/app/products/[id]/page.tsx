@@ -22,6 +22,7 @@ import ProductImageGallery from '@/components/ProductImageGallery'
 import PlatformBadge from '@/components/PlatformBadge'
 import type { Product, Category } from '@prisma/client'
 import type { Platform } from '@/lib/platforms'
+import AdminProductToolbar from '@/components/AdminProductToolbar'
 
 type MediaType = 'IMAGE' | 'VIDEO'
 
@@ -132,6 +133,13 @@ export default async function ProductPage({ params }: PageProps) {
         productTitle={product.title}
         price={product.price}
         imageUrl={product.imageUrl}
+      />
+
+      {/* Admin toolbar for quick edit/upload */}
+      <AdminProductToolbar
+        productId={product.id}
+        productTitle={product.title}
+        existingMedia={(productAny as any).media || []}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
