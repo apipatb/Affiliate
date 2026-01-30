@@ -55,3 +55,8 @@ public/uploads/*
 
 # playwright session (shopee login)
 .playwright-session/
+
+# Generated media files (TikTok videos, audio, thumbnails)
+public/videos/
+public/audio/
+public/thumbnails/
