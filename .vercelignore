@@ -1,0 +1,48 @@
+# Playwright browser session data (very large)
+.playwright-session
+.playwright-session/**
+
+# Dev/test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+
+# Local development files
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+.next
+out
+
+# Package manager
+node_modules
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated media files
+generated-media
+generated-media/**
+*.mp4
+*.webm
+*.mp3
+*.wav
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+
+# Scripts
+scripts
+scripts/**
