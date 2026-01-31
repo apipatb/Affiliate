@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame, Award, Sparkles, Crown, Search } from 'lucide-react'
+import { ArrowRight, Star, TrendingUp, Zap, Eye, AlertCircle, Package, Flame, Award, Sparkles, Crown, Search, Play } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
@@ -13,6 +13,13 @@ import type { Product as PrismaProduct, Category as PrismaCategory } from '@pris
 import { getPlatformConfig, type Platform } from '@/lib/platforms'
 
 type MediaType = 'IMAGE' | 'VIDEO'
+
+type ProductMedia = {
+  id: string
+  url: string
+  type: MediaType
+  order: number
+}
 
 type Product = PrismaProduct & {
   category: PrismaCategory
@@ -27,6 +34,7 @@ type Product = PrismaProduct & {
   isBestSeller?: boolean
   isLimited?: boolean
   launchedAt?: Date | null
+  media?: ProductMedia[]
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -54,6 +62,10 @@ export default function ProductCard({ product }: { product: Product }) {
 
   // New arrival (launched within last 7 days)
   const isNew = product.launchedAt && (new Date().getTime() - new Date(product.launchedAt).getTime()) / (1000 * 60 * 60 * 24) <= 7
+
+  // Check if product has videos in media gallery
+  const hasVideos = product.media?.some(m => m.type === 'VIDEO') || product.mediaType === 'VIDEO'
+  const videoCount = product.media?.filter(m => m.type === 'VIDEO').length || 0
 
   return (
     <motion.div
@@ -140,6 +152,14 @@ export default function ProductCard({ product }: { product: Product }) {
               </div>
             )}
           </div>
+
+          {/* Video Badge - Bottom Left */}
+          {hasVideos && (
+            <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur-sm text-white px-2.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-lg z-10">
+              <Play className="w-3 h-3 fill-white" />
+              {videoCount > 1 ? `${videoCount} วิดีโอ` : 'มีวิดีโอ'}
+            </div>
+          )}
 
           {/* Bottom Left Badges - Show only one based on priority */}
           {isLowStock ? (
