@@ -251,34 +251,38 @@ export async function GET() {
   const hasOpenAI = !!process.env.OPENAI_API_KEY
   const hasGemini = !!(process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY)
 
+  let hasFFmpeg = false
   try {
     await execAsync('which ffmpeg')
-
-    return NextResponse.json({
-      available: true,
-      capabilities: {
-        ffmpeg: true,
-        tts: true,
-        aiImages: hasOpenAI,
-        veo3: hasGemini,
-        formats: ['mp4'],
-        resolution: '1080x1920 (TikTok 9:16)',
-        voices: ['th-TH-PremwadeeNeural (Female)', 'th-TH-NiwatNeural (Male)'],
-        aiModels: {
-          dalle3: hasOpenAI ? 'Available' : 'Not configured (OPENAI_API_KEY)',
-          veo3: hasGemini ? 'Available' : 'Not configured (GOOGLE_GEMINI_API_KEY)',
-        },
-      },
-      usage: {
-        ffmpeg: 'POST with { jobId, useAI: false } - Uses product images',
-        dalle3: 'POST with { jobId, useAI: true } - AI generates images',
-        veo3: 'POST with { jobId, useVeo3: true } - AI generates full video',
-      }
-    })
+    hasFFmpeg = true
   } catch {
-    return NextResponse.json({
-      available: false,
-      error: 'FFmpeg is not installed on the server'
-    })
+    // FFmpeg not available - that's OK for Veo3
   }
+
+  // Available if either FFmpeg (for local generation) or Gemini (for Veo3) is available
+  const isAvailable = hasFFmpeg || hasGemini
+
+  return NextResponse.json({
+    available: isAvailable,
+    capabilities: {
+      ffmpeg: hasFFmpeg,
+      tts: hasFFmpeg,
+      aiImages: hasOpenAI,
+      veo3: hasGemini,
+      formats: ['mp4'],
+      resolution: '1080x1920 (TikTok 9:16)',
+      voices: hasFFmpeg ? ['th-TH-PremwadeeNeural (Female)', 'th-TH-NiwatNeural (Male)'] : [],
+      aiModels: {
+        dalle3: hasOpenAI ? 'Available' : 'Not configured (OPENAI_API_KEY)',
+        veo3: hasGemini ? 'Available' : 'Not configured (GOOGLE_GEMINI_API_KEY)',
+      },
+    },
+    usage: {
+      ffmpeg: hasFFmpeg ? 'POST with { jobId, useAI: false } - Uses product images' : 'Not available (no FFmpeg)',
+      dalle3: hasOpenAI && hasFFmpeg ? 'POST with { jobId, useAI: true } - AI generates images' : 'Not available',
+      veo3: hasGemini ? 'POST with { jobId, useVeo3: true } - AI generates full video (Recommended)' : 'Not configured',
+    },
+    recommended: hasGemini ? 'veo3' : (hasFFmpeg ? 'ffmpeg' : null),
+    note: !hasFFmpeg && hasGemini ? 'FFmpeg not available on server. Use Veo3 for video generation.' : undefined,
+  })
 }

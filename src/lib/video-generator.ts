@@ -7,6 +7,10 @@ import os from 'os'
 import { generateVideoImages, downloadGeneratedImage } from './image-generator'
 import { prisma } from './prisma'
 import { GoogleGenAI } from '@google/genai'
+import { put } from '@vercel/blob'
+
+// Check if running on Vercel (serverless)
+const isVercel = !!process.env.VERCEL
 
 const execAsync = promisify(exec)
 
@@ -897,21 +901,34 @@ export async function generateVeo3Video(options: {
     // Get video duration
     const videoDuration = await getVideoDuration(veo3VideoPath)
 
-    // Move to public folder
     await updateJobProgress(jobId, 90, 'กำลังบันทึกวิดีโอ...')
-    const outputDir = path.join(process.cwd(), 'public', 'videos')
-    await fs.mkdir(outputDir, { recursive: true })
 
     const videoFilename = `tiktok-veo3-${Date.now()}.mp4`
-    const finalVideoPath = path.join(outputDir, videoFilename)
+    let publicVideoPath: string
+    let thumbnailPath: string | null = null
 
-    await fs.copyFile(veo3VideoPath, finalVideoPath)
+    if (isVercel && process.env.BLOB_READ_WRITE_TOKEN) {
+      // Upload to Vercel Blob Storage
+      console.log('📤 Uploading to Vercel Blob Storage...')
+      const videoBuffer = await fs.readFile(veo3VideoPath)
+      const blob = await put(videoFilename, videoBuffer, {
+        access: 'public',
+        contentType: 'video/mp4',
+      })
+      publicVideoPath = blob.url
+      console.log(`✅ Video uploaded to Blob: ${publicVideoPath}`)
+    } else {
+      // Save to local public folder (for development)
+      const outputDir = path.join(process.cwd(), 'public', 'videos')
+      await fs.mkdir(outputDir, { recursive: true })
+      const finalVideoPath = path.join(outputDir, videoFilename)
+      await fs.copyFile(veo3VideoPath, finalVideoPath)
+      publicVideoPath = `/videos/${videoFilename}`
 
-    const publicVideoPath = `/videos/${videoFilename}`
-
-    // Generate thumbnail
-    await updateJobProgress(jobId, 95, 'กำลังสร้าง Thumbnail...')
-    const thumbnailPath = await generateThumbnail(publicVideoPath)
+      // Generate thumbnail (only works locally with FFmpeg)
+      await updateJobProgress(jobId, 95, 'กำลังสร้าง Thumbnail...')
+      thumbnailPath = await generateThumbnail(publicVideoPath)
+    }
 
     // Cleanup temp files
     await updateJobProgress(jobId, 98, 'กำลังทำความสะอาดไฟล์ชั่วคราว...')

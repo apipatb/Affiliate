@@ -61,7 +61,12 @@
       "Bash(sqlite3:*)",
       "Bash(chmod:*)",
       "WebSearch",
-      "WebFetch(domain:ai.google.dev)"
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(npx vercel:*)",
+      "Bash(POSTGRES_PRISMA_URL=\"\" POSTGRES_URL_NON_POOLING=\"\" npx prisma generate:*)",
+      "WebFetch(domain:vercel.com)",
+      "Bash(npm ls:*)",
+      "Bash(gh api:*)"
     ]
   }
 }
