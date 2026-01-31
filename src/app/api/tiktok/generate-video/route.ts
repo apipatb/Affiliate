@@ -194,10 +194,28 @@ export async function POST(request: NextRequest) {
         where: { id: jobId },
         data: {
           videoUrl: result.videoPath,
-          status: 'PENDING', // Back to pending, ready for posting
+          status: 'DONE', // Video generated successfully
           error: null,
         }
       })
+
+      // If job has internalProductId, save video to Product's media gallery
+      if (job.internalProductId) {
+        try {
+          await prisma.productMedia.create({
+            data: {
+              productId: job.internalProductId,
+              url: result.videoPath,
+              type: 'VIDEO',
+              order: 99, // Add at end
+            }
+          })
+          console.log(`📹 Video saved to product ${job.internalProductId} media gallery`)
+        } catch (e) {
+          console.log('Could not save video to product media:', e)
+          // Don't fail the whole operation if this fails
+        }
+      }
 
       // Determine generation method for response
       const generationMethod = useVeo3 ? 'veo3' : useAI ? 'dalle3' : 'ffmpeg'
