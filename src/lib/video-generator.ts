@@ -829,6 +829,11 @@ export async function generateVeo3Video(options: {
     throw new Error('GOOGLE_GEMINI_API_KEY is not configured. Please add it to .env.local')
   }
 
+  // Check if Blob storage is configured on Vercel
+  if (isVercel && !process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error('BLOB_READ_WRITE_TOKEN is not configured. Please connect Vercel Blob Storage at: https://vercel.com/golf-cts-projects/affiliate-golf-review/stores')
+  }
+
   await updateJobProgress(jobId, 5, 'เริ่มสร้างวิดีโอด้วย Veo 3...')
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tiktok-veo3-'))
