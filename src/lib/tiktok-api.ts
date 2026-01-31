@@ -21,6 +21,57 @@ const REDIRECT_URI = process.env.TIKTOK_REDIRECT_URI || `${process.env.NEXT_PUBL
 const MAX_DAILY_POSTS = 15 // TikTok's daily limit per account
 const CHUNK_SIZE = 10 * 1024 * 1024 // 10MB chunks for video upload
 
+// Retry configuration
+const DEFAULT_RETRIES = 3
+const RETRY_DELAY_MS = 1000
+
+/**
+ * Helper function for API calls with retry and exponential backoff
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retries: number = DEFAULT_RETRIES
+): Promise<Response> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(url, options)
+
+      // Don't retry on client errors (4xx) except 429 (rate limit)
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        return response
+      }
+
+      // Retry on server errors (5xx) or rate limit
+      if (response.ok || (response.status !== 429 && response.status < 500)) {
+        return response
+      }
+
+      // Rate limit - wait longer
+      if (response.status === 429) {
+        const retryAfter = parseInt(response.headers.get('Retry-After') || '60')
+        await new Promise(r => setTimeout(r, retryAfter * 1000))
+        continue
+      }
+
+      throw new Error(`HTTP ${response.status}`)
+    } catch (error: any) {
+      lastError = error
+      console.warn(`API call attempt ${attempt + 1}/${retries} failed:`, error.message)
+
+      if (attempt < retries - 1) {
+        // Exponential backoff
+        const delay = RETRY_DELAY_MS * Math.pow(2, attempt)
+        await new Promise(r => setTimeout(r, delay))
+      }
+    }
+  }
+
+  throw lastError || new Error('All retry attempts failed')
+}
+
 // Types
 export interface TikTokTokenResponse {
   access_token: string
@@ -82,10 +133,10 @@ export function getAuthorizationUrl(state: string): string {
 }
 
 /**
- * Exchange authorization code for tokens
+ * Exchange authorization code for tokens (with retry)
  */
 export async function exchangeCodeForTokens(code: string): Promise<TikTokTokenResponse> {
-  const response = await fetch(TIKTOK_TOKEN_URL, {
+  const response = await fetchWithRetry(TIKTOK_TOKEN_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -108,10 +159,10 @@ export async function exchangeCodeForTokens(code: string): Promise<TikTokTokenRe
 }
 
 /**
- * Refresh access token
+ * Refresh access token (with retry)
  */
 export async function refreshAccessToken(refreshToken: string): Promise<TikTokTokenResponse> {
-  const response = await fetch(TIKTOK_TOKEN_URL, {
+  const response = await fetchWithRetry(TIKTOK_TOKEN_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',

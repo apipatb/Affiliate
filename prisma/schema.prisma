@@ -257,6 +257,9 @@ model TikTokJob {
   @@index([status, createdAt])
   @@index([tiktokAccountId])
   @@index([scheduledAt])
+  @@index([status, scheduledAt])          // For cron job queries
+  @@index([tiktokAccountId, status])      // For account-specific job queries
+  @@index([internalProductId])            // For product lookups
 }
 
 // Hook templates for AI generation

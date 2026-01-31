@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateVideo, generateAIVideo } from '@/lib/video-generator'
 
+// Validation constants
+const MAX_HOOK_LENGTH = 2000
+const MAX_CAPTION_LENGTH = 2200
+const VALID_TEXT_STYLES = ['minimal', 'bold', 'neon', 'simple']
+const VALID_MUSIC_OPTIONS = ['upbeat', 'chill', 'energetic', 'corporate', null, '']
+
+/**
+ * Validate image URL to prevent SSRF
+ */
+function isValidImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    // Only allow http/https
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false
+    // Block internal/private IPs
+    const hostname = parsed.hostname.toLowerCase()
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.')) {
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
 // POST /api/tiktok/generate-video - Generate video for a job
 export async function POST(request: NextRequest) {
   try {

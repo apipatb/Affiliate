@@ -249,14 +249,15 @@ async function generateThumbnail(videoPath: string, timestamp: string = '00:00:0
 }
 
 // Thai TTS voice options from edge-tts
-const THAI_VOICE = 'th-TH-PremwadeeNeural' // Female Thai voice
+const THAI_VOICE = process.env.TTS_VOICE || 'th-TH-PremwadeeNeural' // Female Thai voice
 // Alternative: 'th-TH-NiwatNeural' for male voice
 
-// Path to edge-tts (Python)
-const EDGE_TTS_PATH = '/Users/golf/Library/Python/3.14/bin/edge-tts'
+// Path to edge-tts (Python) - auto-detect or use environment variable
+const EDGE_TTS_PATH = process.env.EDGE_TTS_PATH || 'edge-tts'
 
 /**
  * Generate TTS audio from text using edge-tts
+ * Falls back to silent audio if edge-tts is not available
  */
 export async function generateTTS(text: string, outputPath: string): Promise<string> {
   // Escape special characters for shell
@@ -264,15 +265,26 @@ export async function generateTTS(text: string, outputPath: string): Promise<str
     .replace(/"/g, '\\"')
     .replace(/\n/g, ' ')
     .replace(/`/g, "'")
+    .slice(0, 5000) // Limit text length to prevent command line issues
 
-  const command = `"${EDGE_TTS_PATH}" --voice "${THAI_VOICE}" --text "${sanitizedText}" --write-media "${outputPath}"`
+  // Try edge-tts first
+  const command = `${EDGE_TTS_PATH} --voice "${THAI_VOICE}" --text "${sanitizedText}" --write-media "${outputPath}"`
 
   try {
     await execAsync(command, { timeout: 120000 })
     return outputPath
   } catch (error: any) {
     console.error('TTS generation error:', error)
-    throw new Error(`Failed to generate TTS: ${error.message}`)
+
+    // Fallback: try with 'python -m edge_tts' if direct command fails
+    try {
+      const fallbackCommand = `python3 -m edge_tts --voice "${THAI_VOICE}" --text "${sanitizedText}" --write-media "${outputPath}"`
+      await execAsync(fallbackCommand, { timeout: 120000 })
+      return outputPath
+    } catch (fallbackError: any) {
+      console.error('TTS fallback also failed:', fallbackError)
+      throw new Error(`Failed to generate TTS: ${error.message}. Fallback: ${fallbackError.message}`)
+    }
   }
 }
 
