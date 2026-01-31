@@ -6,6 +6,7 @@ import fsSync from 'fs'
 import os from 'os'
 import { generateVideoImages, downloadGeneratedImage } from './image-generator'
 import { prisma } from './prisma'
+import { GoogleGenAI } from '@google/genai'
 
 const execAsync = promisify(exec)
 
@@ -794,4 +795,199 @@ export async function generateAIVideo(options: {
     }
     throw error
   }
+}
+
+/**
+ * Generate video using Google Veo 3
+ * Creates high-quality AI video from text prompt
+ */
+export async function generateVeo3Video(options: {
+  jobId?: string
+  productName: string
+  hook1: string
+  hook2: string
+  hook3: string
+  ending: string
+  aspectRatio?: '16:9' | '9:16' // Default 9:16 for TikTok
+}): Promise<GeneratedVideo> {
+  const {
+    jobId,
+    productName,
+    hook1,
+    hook2,
+    hook3,
+    ending,
+    aspectRatio = '9:16',
+  } = options
+
+  const apiKey = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    throw new Error('GOOGLE_GEMINI_API_KEY is not configured. Please add it to .env.local')
+  }
+
+  await updateJobProgress(jobId, 5, 'เริ่มสร้างวิดีโอด้วย Veo 3...')
+
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tiktok-veo3-'))
+
+  try {
+    // Initialize Google GenAI client
+    const ai = new GoogleGenAI({ apiKey })
+
+    // Create compelling video prompt
+    const videoPrompt = createVeo3Prompt({
+      productName,
+      hooks: [hook1, hook2, hook3, ending].filter(Boolean),
+      aspectRatio,
+    })
+
+    console.log('🎬 Veo 3 Prompt:', videoPrompt)
+    await updateJobProgress(jobId, 10, 'กำลังส่งคำขอไปยัง Veo 3...')
+
+    // Generate video using Veo 3.1
+    let operation = await ai.models.generateVideos({
+      model: 'veo-3.1-generate-preview',
+      prompt: videoPrompt,
+      config: {
+        aspectRatio: aspectRatio,
+        numberOfVideos: 1,
+      },
+    })
+
+    // Poll for completion
+    let pollCount = 0
+    const maxPolls = 60 // Max 10 minutes (10s * 60)
+    await updateJobProgress(jobId, 15, 'กำลังรอ Veo 3 สร้างวิดีโอ...')
+
+    while (!operation.done && pollCount < maxPolls) {
+      pollCount++
+      const progress = Math.min(15 + (pollCount / maxPolls) * 60, 75)
+      await updateJobProgress(jobId, Math.round(progress), `Veo 3 กำลังสร้างวิดีโอ... (${pollCount * 10}s)`)
+
+      console.log(`⏳ Waiting for Veo 3... (${pollCount * 10}s)`)
+      await new Promise((resolve) => setTimeout(resolve, 10000))
+
+      operation = await ai.operations.getVideosOperation({ operation })
+    }
+
+    if (!operation.done) {
+      throw new Error('Veo 3 video generation timed out after 10 minutes')
+    }
+
+    // Check for errors
+    if (!operation.response?.generatedVideos?.length) {
+      throw new Error('Veo 3 did not generate any video')
+    }
+
+    await updateJobProgress(jobId, 80, 'ดาวน์โหลดวิดีโอจาก Veo 3...')
+
+    // Download the generated video
+    const generatedVideo = operation.response.generatedVideos[0]
+    if (!generatedVideo?.video) {
+      throw new Error('Veo 3 returned empty video')
+    }
+    const veo3VideoPath = path.join(tempDir, 'veo3-raw.mp4')
+
+    await ai.files.download({
+      file: generatedVideo.video,
+      downloadPath: veo3VideoPath,
+    })
+
+    console.log('✅ Veo 3 video downloaded')
+
+    // Get video duration
+    const videoDuration = await getVideoDuration(veo3VideoPath)
+
+    // Move to public folder
+    await updateJobProgress(jobId, 90, 'กำลังบันทึกวิดีโอ...')
+    const outputDir = path.join(process.cwd(), 'public', 'videos')
+    await fs.mkdir(outputDir, { recursive: true })
+
+    const videoFilename = `tiktok-veo3-${Date.now()}.mp4`
+    const finalVideoPath = path.join(outputDir, videoFilename)
+
+    await fs.copyFile(veo3VideoPath, finalVideoPath)
+
+    const publicVideoPath = `/videos/${videoFilename}`
+
+    // Generate thumbnail
+    await updateJobProgress(jobId, 95, 'กำลังสร้าง Thumbnail...')
+    const thumbnailPath = await generateThumbnail(publicVideoPath)
+
+    // Cleanup temp files
+    await updateJobProgress(jobId, 98, 'กำลังทำความสะอาดไฟล์ชั่วคราว...')
+    try {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+
+    console.log('✅ Veo 3 video generated successfully!')
+
+    return {
+      videoPath: publicVideoPath,
+      audioPath: '', // Veo 3 includes audio
+      duration: videoDuration,
+      thumbnailPath: thumbnailPath || undefined,
+    }
+
+  } catch (error) {
+    // Cleanup on error
+    try {
+      await fs.rm(tempDir, { recursive: true, force: true })
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+    throw error
+  }
+}
+
+/**
+ * Get video duration using ffprobe
+ */
+async function getVideoDuration(videoPath: string): Promise<number> {
+  const command = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoPath}"`
+
+  try {
+    const { stdout } = await execAsync(command)
+    return parseFloat(stdout.trim())
+  } catch (error: any) {
+    console.error('ffprobe error:', error)
+    return 8 // Default 8 seconds for Veo 3
+  }
+}
+
+/**
+ * Create optimized prompt for Veo 3
+ */
+function createVeo3Prompt(options: {
+  productName: string
+  hooks: string[]
+  aspectRatio: '16:9' | '9:16'
+}): string {
+  const { productName, hooks, aspectRatio } = options
+
+  // Combine hooks into a compelling narrative
+  const narrative = hooks.join(' ')
+
+  // Determine video style based on aspect ratio
+  const orientation = aspectRatio === '9:16' ? 'vertical portrait' : 'horizontal landscape'
+
+  // Create cinematic prompt
+  const prompt = `
+Create a ${orientation} video advertisement for "${productName}".
+
+Scene description: ${narrative}
+
+Style requirements:
+- High-quality, cinematic product showcase
+- Smooth camera movements with subtle Ken Burns effect
+- Professional lighting with soft shadows
+- Modern, clean aesthetic suitable for social media
+- Focus on the product with elegant transitions
+- Upbeat, engaging mood
+
+Technical: Sharp focus, professional color grading, 4K quality appearance.
+`.trim()
+
+  return prompt
 }

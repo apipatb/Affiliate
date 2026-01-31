@@ -19,6 +19,7 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@google/genai": "^1.39.0",
     "@prisma/client": "^6.19.1",
     "@types/fluent-ffmpeg": "^2.1.28",
     "bcryptjs": "^3.0.3",

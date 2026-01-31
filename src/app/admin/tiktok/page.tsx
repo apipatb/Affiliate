@@ -78,12 +78,19 @@ interface TikTokJob {
 
 // Video generation options
 interface VideoOptions {
+  generationMethod: 'ffmpeg' | 'dalle3' | 'veo3'
   backgroundMusic: string | null
   musicVolume: number
   showTextOverlay: boolean
   textStyle: 'minimal' | 'bold' | 'neon' | 'simple'
   watermark: WatermarkOptions
 }
+
+const GENERATION_METHODS = [
+  { value: 'ffmpeg', label: '🎬 FFmpeg (รูปสินค้า)', description: 'ใช้รูปสินค้าจริง + เสียง TTS' },
+  { value: 'dalle3', label: '🎨 DALL-E 3 (AI รูป)', description: 'AI สร้างรูปภาพ + เสียง TTS' },
+  { value: 'veo3', label: '🎥 Veo 3 (AI วิดีโอ)', description: 'AI สร้างวิดีโอคุณภาพสูง พร้อมเสียง' },
+]
 
 interface WatermarkOptions {
   enabled: boolean
@@ -136,6 +143,7 @@ const VIDEO_TEMPLATES: { id: string; name: string; description: string; settings
     name: '🔥 Flash Sale',
     description: 'สำหรับโปรโมชั่นลดราคา',
     settings: {
+      generationMethod: 'ffmpeg',
       backgroundMusic: 'energetic',
       musicVolume: 0.4,
       showTextOverlay: true,
@@ -147,6 +155,7 @@ const VIDEO_TEMPLATES: { id: string; name: string; description: string; settings
     name: '⭐ Product Review',
     description: 'รีวิวสินค้าแบบมืออาชีพ',
     settings: {
+      generationMethod: 'ffmpeg',
       backgroundMusic: 'chill',
       musicVolume: 0.25,
       showTextOverlay: true,
@@ -158,6 +167,7 @@ const VIDEO_TEMPLATES: { id: string; name: string; description: string; settings
     name: '📦 Unboxing',
     description: 'แกะกล่องสินค้าใหม่',
     settings: {
+      generationMethod: 'ffmpeg',
       backgroundMusic: 'upbeat',
       musicVolume: 0.35,
       showTextOverlay: true,
@@ -169,6 +179,7 @@ const VIDEO_TEMPLATES: { id: string; name: string; description: string; settings
     name: '📚 Tutorial',
     description: 'สอนวิธีใช้งานสินค้า',
     settings: {
+      generationMethod: 'ffmpeg',
       backgroundMusic: 'corporate',
       musicVolume: 0.2,
       showTextOverlay: true,
@@ -180,6 +191,7 @@ const VIDEO_TEMPLATES: { id: string; name: string; description: string; settings
     name: '🎯 Minimal',
     description: 'เรียบง่าย ไม่มีเพลง',
     settings: {
+      generationMethod: 'ffmpeg',
       backgroundMusic: null,
       musicVolume: 0,
       showTextOverlay: false,
@@ -278,6 +290,7 @@ export default function TikTokDashboard() {
   const [generatingVideo, setGeneratingVideo] = useState<Set<string>>(new Set())
   const [showVideoOptions, setShowVideoOptions] = useState<string | null>(null)
   const [videoOptions, setVideoOptions] = useState<VideoOptions>({
+    generationMethod: 'ffmpeg',
     backgroundMusic: null,
     musicVolume: 0.3,
     showTextOverlay: false,
@@ -347,8 +360,10 @@ export default function TikTokDashboard() {
       const url = filter === 'all' ? '/api/tiktok/jobs' : `/api/tiktok/jobs?status=${filter}`
       const res = await fetch(url)
       if (res.ok) {
-        const data = await res.json()
-        setJobs(data)
+        const result = await res.json()
+        // API returns { success, data: { jobs: [...] } }
+        const jobsData = result.data?.jobs || result.jobs || result || []
+        setJobs(Array.isArray(jobsData) ? jobsData : [])
       }
     } catch (error) {
       console.error('Failed to fetch jobs:', error)
@@ -894,6 +909,8 @@ export default function TikTokDashboard() {
     if (generatingVideo.has(jobId)) return
 
     const opts = options || videoOptions
+    const method = opts.generationMethod || 'ffmpeg'
+
     setGeneratingVideo(prev => new Set(prev).add(jobId))
     setShowVideoOptions(null)
 
@@ -903,12 +920,13 @@ export default function TikTokDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jobId,
-          useAI,
-          backgroundMusic: opts.backgroundMusic,
+          useAI: method === 'dalle3',
+          useVeo3: method === 'veo3',
+          backgroundMusic: method !== 'veo3' ? opts.backgroundMusic : null, // Veo3 มีเสียงในตัว
           musicVolume: opts.musicVolume,
-          showTextOverlay: opts.showTextOverlay,
+          showTextOverlay: method !== 'veo3' ? opts.showTextOverlay : false,
           textStyle: opts.textStyle,
-          watermark: opts.watermark?.enabled ? opts.watermark : null,
+          watermark: opts.watermark?.enabled && method !== 'veo3' ? opts.watermark : null,
         }),
       })
 
@@ -955,15 +973,17 @@ export default function TikTokDashboard() {
     alert(`คัดลอก ${type} URL แล้ว!`)
   }
 
+  // Ensure jobs is always an array for stats calculation
+  const safeJobs = Array.isArray(jobs) ? jobs : []
   const stats = {
-    total: jobs.length,
-    pending: jobs.filter(j => j.status === 'PENDING').length,
-    done: jobs.filter(j => j.status === 'DONE').length,
-    failed: jobs.filter(j => j.status === 'FAILED').length,
-    withVideo: jobs.filter(j => j.final_video).length,
-    withHooks: jobs.filter(j => j.hooking && j.hooking.trim() !== '').length,
-    scheduled: jobs.filter(j => j.scheduledAt).length,
-    readyToGenerate: jobs.filter(j =>
+    total: safeJobs.length,
+    pending: safeJobs.filter(j => j.status === 'PENDING').length,
+    done: safeJobs.filter(j => j.status === 'DONE').length,
+    failed: safeJobs.filter(j => j.status === 'FAILED').length,
+    withVideo: safeJobs.filter(j => j.final_video).length,
+    withHooks: safeJobs.filter(j => j.hooking && j.hooking.trim() !== '').length,
+    scheduled: safeJobs.filter(j => j.scheduledAt).length,
+    readyToGenerate: safeJobs.filter(j =>
       j.status === 'PENDING' &&
       j.hooking &&
       j.productImage &&
@@ -1615,7 +1635,32 @@ export default function TikTokDashboard() {
                                 ตัวเลือกสร้าง Video
                               </h4>
 
-                              {/* Template Presets */}
+                              {/* Generation Method Selector */}
+                              <div className="mb-4">
+                                <label className="text-xs text-slate-500 mb-2 block">🚀 วิธีสร้างวิดีโอ</label>
+                                <div className="space-y-2">
+                                  {GENERATION_METHODS.map(method => (
+                                    <button
+                                      key={method.value}
+                                      onClick={() => setVideoOptions({...videoOptions, generationMethod: method.value as any})}
+                                      className={`w-full text-left p-2 rounded-lg border text-xs transition-all ${
+                                        videoOptions.generationMethod === method.value
+                                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                                          : 'border-slate-200 dark:border-slate-600 hover:border-blue-300'
+                                      }`}
+                                    >
+                                      <div className="font-medium">{method.label}</div>
+                                      <div className="text-slate-500 text-[10px]">{method.description}</div>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <hr className="my-3 border-slate-200 dark:border-slate-600" />
+
+                              {/* Template Presets - Hidden for Veo3 */}
+                              {videoOptions.generationMethod !== 'veo3' && (
+                              <>
                               <div className="mb-4">
                                 <label className="text-xs text-slate-500 mb-2 block">🎬 เลือก Template</label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -1780,15 +1825,36 @@ export default function TikTokDashboard() {
                                   </div>
                                 </div>
                               )}
+                              </>
+                              )}
+
+                              {/* Veo3 Info */}
+                              {videoOptions.generationMethod === 'veo3' && (
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-xs">
+                                  <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">✨ Google Veo 3 AI</p>
+                                  <ul className="text-blue-600 dark:text-blue-400 space-y-1">
+                                    <li>• สร้างวิดีโอ AI คุณภาพสูง 8 วินาที</li>
+                                    <li>• มีเสียงและ sound effects ในตัว</li>
+                                    <li>• ใช้เวลาประมาณ 1-2 นาที</li>
+                                  </ul>
+                                </div>
+                              )}
 
                               {/* Generate Buttons */}
                               <div className="flex gap-2 mt-4">
                                 <button
                                   onClick={() => handleGenerateVideo(job.id, false, videoOptions)}
-                                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-purple-500 text-white rounded-lg text-sm hover:bg-purple-600"
+                                  className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 text-white rounded-lg text-sm ${
+                                    videoOptions.generationMethod === 'veo3'
+                                      ? 'bg-blue-500 hover:bg-blue-600'
+                                      : videoOptions.generationMethod === 'dalle3'
+                                      ? 'bg-green-500 hover:bg-green-600'
+                                      : 'bg-purple-500 hover:bg-purple-600'
+                                  }`}
                                 >
                                   <Film className="w-4 h-4" />
-                                  สร้าง
+                                  {videoOptions.generationMethod === 'veo3' ? 'สร้างด้วย Veo 3' :
+                                   videoOptions.generationMethod === 'dalle3' ? 'สร้างด้วย DALL-E' : 'สร้างวิดีโอ'}
                                 </button>
                                 <button
                                   onClick={() => setShowVideoOptions(null)}

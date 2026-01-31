@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateVideo, generateAIVideo } from '@/lib/video-generator'
+import { generateVideo, generateAIVideo, generateVeo3Video } from '@/lib/video-generator'
 
 // Validation constants
 const MAX_HOOK_LENGTH = 2000
@@ -32,11 +32,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const jobId = body.jobId || body.id
-    const useAI = body.useAI || body.ai || false // Use AI-generated images
+    const useAI = body.useAI || body.ai || false // Use AI-generated images (DALL-E 3)
+    const useVeo3 = body.useVeo3 || body.veo3 || false // Use Google Veo 3 AI video
     const backgroundMusic = body.backgroundMusic || null // Optional: 'upbeat', 'chill', 'energetic', 'corporate'
     const musicVolume = body.musicVolume || 0.3 // 0.0 to 1.0
     const showTextOverlay = body.showTextOverlay || false // Show hook text on video
     const textStyle = body.textStyle || 'bold' // 'minimal', 'bold', 'neon', 'simple'
+    const aspectRatio = body.aspectRatio || '9:16' // '16:9' or '9:16' (for Veo 3)
 
     // Watermark options
     const watermark = body.watermark || null // { enabled, type, imagePath, text, position, opacity, scale, margin }
@@ -83,6 +85,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if Google Gemini API key is available for Veo 3
+    if (useVeo3 && !process.env.GOOGLE_GEMINI_API_KEY && !process.env.GEMINI_API_KEY) {
+      return NextResponse.json(
+        { error: 'GOOGLE_GEMINI_API_KEY is not configured. Please add it to .env.local' },
+        { status: 400 }
+      )
+    }
+
     // Update job status to PROCESSING
     await prisma.tikTokJob.update({
       where: { id: jobId },
@@ -92,9 +102,22 @@ export async function POST(request: NextRequest) {
     try {
       let result
 
-      if (useAI) {
-        // Generate video with AI-generated images
-        console.log(`Generating AI video for job ${jobId}...`)
+      if (useVeo3) {
+        // Generate video with Google Veo 3 AI
+        console.log(`Generating Veo 3 AI video for job ${jobId}...`)
+
+        result = await generateVeo3Video({
+          jobId,
+          productName: job.productName || 'Product',
+          hook1: job.hook1 || '',
+          hook2: job.hook2 || '',
+          hook3: job.hook3 || '',
+          ending: job.ending || '',
+          aspectRatio: aspectRatio as '16:9' | '9:16',
+        })
+      } else if (useAI) {
+        // Generate video with AI-generated images (DALL-E 3)
+        console.log(`Generating DALL-E 3 video for job ${jobId}...`)
 
         result = await generateAIVideo({
           productName: job.productName || 'Product',
@@ -176,14 +199,23 @@ export async function POST(request: NextRequest) {
         }
       })
 
+      // Determine generation method for response
+      const generationMethod = useVeo3 ? 'veo3' : useAI ? 'dalle3' : 'ffmpeg'
+      const messageMap = {
+        veo3: 'Veo 3 AI Video generated successfully',
+        dalle3: 'DALL-E 3 AI Video generated successfully',
+        ffmpeg: 'Video generated successfully',
+      }
+
       return NextResponse.json({
         success: true,
-        message: useAI ? 'AI Video generated successfully' : 'Video generated successfully',
+        message: messageMap[generationMethod],
         job: {
           id: updatedJob.id,
           videoUrl: updatedJob.videoUrl,
           duration: result.duration,
-          aiGenerated: useAI,
+          generationMethod,
+          aiGenerated: useAI || useVeo3,
         }
       })
 
@@ -217,6 +249,7 @@ export async function GET() {
   const execAsync = promisify(exec)
 
   const hasOpenAI = !!process.env.OPENAI_API_KEY
+  const hasGemini = !!(process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY)
 
   try {
     await execAsync('which ffmpeg')
@@ -227,10 +260,19 @@ export async function GET() {
         ffmpeg: true,
         tts: true,
         aiImages: hasOpenAI,
+        veo3: hasGemini,
         formats: ['mp4'],
         resolution: '1080x1920 (TikTok 9:16)',
         voices: ['th-TH-PremwadeeNeural (Female)', 'th-TH-NiwatNeural (Male)'],
-        aiModel: hasOpenAI ? 'DALL-E 3' : 'Not configured',
+        aiModels: {
+          dalle3: hasOpenAI ? 'Available' : 'Not configured (OPENAI_API_KEY)',
+          veo3: hasGemini ? 'Available' : 'Not configured (GOOGLE_GEMINI_API_KEY)',
+        },
+      },
+      usage: {
+        ffmpeg: 'POST with { jobId, useAI: false } - Uses product images',
+        dalle3: 'POST with { jobId, useAI: true } - AI generates images',
+        veo3: 'POST with { jobId, useVeo3: true } - AI generates full video',
       }
     })
   } catch {
