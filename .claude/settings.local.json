@@ -59,7 +59,9 @@
       "Bash(echo:*)",
       "Bash(npx playwright install:*)",
       "Bash(sqlite3:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "WebSearch",
+      "WebFetch(domain:ai.google.dev)"
     ]
   }
 }
