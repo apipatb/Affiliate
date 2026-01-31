@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Rewrites for TikTok verification
+  async rewrites() {
+    return [
+      {
+        source: '/tiktok-developers-site-verification.txt',
+        destination: '/api/tiktok-verify',
+      },
+    ]
+  },
+
   // Image optimization
   images: {
     remotePatterns: [
