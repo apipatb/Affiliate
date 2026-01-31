@@ -2,9 +2,19 @@ import OpenAI from 'openai'
 import path from 'path'
 import fs from 'fs/promises'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy initialization to avoid build-time errors when API key is not set
+let openaiClient: OpenAI | null = null
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not configured')
+    }
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  }
+  return openaiClient
+}
 
 interface GenerateImageOptions {
   productName: string
@@ -52,7 +62,7 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
   const prompt = createImagePrompt(options)
 
   try {
-    const response = await openai.images.generate({
+    const response = await getOpenAI().images.generate({
       model: 'dall-e-3',
       prompt,
       n: 1,
